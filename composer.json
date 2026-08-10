@@ -1,0 +1,66 @@
+{
+    "name": "charsen/moo-feedback",
+    "description": "意见反馈 —— 「外部提交 → 后台受理 → 回复 → 状态流转」统一管理、统一实现的 Laravel 功能模块扩展包；匿名访客与登录用户两类提交人共表，单表自引用话题串，分类目录走 host 绑定的 FeedbackTypeResolver 契约声明。",
+    "keywords": [
+        "mooeen",
+        "feedback",
+        "inquiry",
+        "laravel"
+    ],
+    "type": "library",
+    "homepage": "https://github.com/charsen/moo-feedback",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Charsen",
+            "email": "780537@gmail.com",
+            "homepage": "https://www.charsen.com",
+            "role": "Developer"
+        }
+    ],
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": "^8.2",
+        "laravel/framework": "^10.0 || ^11.0 || ^12.0",
+        "charsen/moo-scaffold": "^2.1.7",
+        "tucker-eric/eloquentfilter": "^3.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.13",
+        "orchestra/testbench": "^10.0",
+        "pestphp/pest": "^3.0",
+        "pestphp/pest-plugin-laravel": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Mooeen\\Feedback\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Mooeen\\Feedback\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "./vendor/bin/pest",
+        "pint": "./vendor/bin/pint",
+        "pint:check": "./vendor/bin/pint --test",
+        "ci": [
+            "@pint:check",
+            "@test"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Mooeen\\Feedback\\MooeenFeedbackServiceProvider"
+            ]
+        }
+    }
+}
