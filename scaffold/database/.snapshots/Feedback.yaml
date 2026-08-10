@@ -1,0 +1,56 @@
+module:
+    name: 意见反馈
+    folder: Feedback
+tables:
+    moo_feedbacks:
+        model:
+            class: Feedback
+        controller:
+            class: FeedbackController
+            app: [admin]
+        attrs:
+            name: 反馈
+            desc: '统一反馈表:外部提交 → 后台受理 → 回复 → 状态流转;单表自引用话题串,顶楼行 = 一条反馈,子行 = 一条发言'
+            remark: ['1. 业务字段(分类 / 状态 / 联系方式 / 多态宿主 / 环境采集 / 派生缓存)只在顶楼行有意义,子行一律为空,由模型层守门;', '2. 分类取值由 host 经 FeedbackTypeResolver 契约声明,包不硬编码;', '3. 状态封闭不开放扩展 —— 它驱动事件 / 默认筛选 / 统计,开放则行为不确定;', '4. 除 id / deleted_at / created_at / updated_at 外,所有字段带 feedback_ 前缀,避免与其它包的 db.php 词条相撞。']
+            prefix: moo_
+            created_by: charsen
+            created_at: '2026-08-10 00:00:00'
+            updated_by: charsen
+            updated_at: '2026-08-10 00:00:00'
+        index:
+            id: { type: primary, fields: id }
+            feedbackable: { type: index, fields: [feedbackable_type, feedbackable_id] }
+            feedback_root_id: { type: index, fields: feedback_root_id }
+            feedback_parent_id: { type: index, fields: feedback_parent_id }
+            feedback_submitter_id: { type: index, fields: feedback_submitter_id }
+            feedback_status: { type: index, fields: feedback_status }
+            feedback_ip: { type: index, fields: feedback_ip }
+        fields:
+            id: {  }
+            feedback_root_id: { required: false, name: 顶楼反馈ID, type: bigint, desc: 所属顶楼;null=自身是顶楼 }
+            feedback_parent_id: { required: false, name: 父行ID, type: bigint, desc: 直接父行;null=顶级 }
+            feedbackable_type: { required: false, name: 多态模型, type: varchar, size: 128, desc: '多态宿主模型 FQN;仅顶楼行' }
+            feedbackable_id: { required: false, name: 多态ID, type: bigint, desc: '多态宿主 ID;仅顶楼行' }
+            feedbackable_title: { required: false, name: 反馈对象标题快照, type: varchar, size: 192, desc: '提交时刻宿主对象标题写时快照,对象改名不回溯' }
+            feedback_type: { required: false, name: 分类, type: varchar, size: 32, desc: 'host 经 FeedbackTypeResolver 声明的分类 key;仅顶楼行' }
+            feedback_status: { name: 受理状态, type: tinyint, default: 10 }
+            feedback_content: { name: 内容, type: text }
+            feedback_submitter_id: { required: false, name: 发言人ID, type: bigint, desc: 有值=登录用户/受理人;null=匿名访客 }
+            feedback_speaker_side: { name: 发言侧, type: tinyint, default: 1 }
+            feedback_contact_name: { required: false, name: 联系人, type: varchar, size: 100, desc: 匿名提交时的联系方式快照;仅顶楼行 }
+            feedback_organization: { required: false, name: 企业机构, type: varchar, size: 200, desc: 匿名提交时的联系方式快照;仅顶楼行 }
+            feedback_phone: { required: false, name: 联系电话, type: varchar, size: 30, desc: 匿名提交时的联系方式快照;仅顶楼行 }
+            feedback_email: { required: false, name: 邮箱, type: varchar, size: 200, desc: 匿名提交时的联系方式快照;仅顶楼行 }
+            feedback_ip: { required: false, name: IP, type: varchar, size: 64, desc: '提交环境采集,可经 config 关闭;兼作反垃圾限流维度;仅顶楼行' }
+            feedback_device: { required: false, name: 设备, type: varchar, size: 64, desc: 提交环境采集;仅顶楼行 }
+            feedback_platform: { required: false, name: 操作系统, type: varchar, size: 64, desc: 提交环境采集;仅顶楼行 }
+            feedback_browser: { required: false, name: 浏览器, type: varchar, size: 64, desc: 提交环境采集;仅顶楼行 }
+            feedback_page_url: { required: false, name: 来源页面, type: varchar, size: 512, desc: 提交环境采集;仅顶楼行 }
+            feedback_last_speaker_side: { required: false, name: 最后发言侧, type: tinyint, desc: '派生缓存,取值同发言侧,供列表排序预览,不参与业务判断;仅顶楼行' }
+            feedback_last_replied_at: { required: false, name: 最后发言于, type: timestamp, desc: '派生缓存,供列表排序预览,不参与业务判断;仅顶楼行' }
+            deleted_at: {  }
+            created_at: {  }
+            updated_at: {  }
+        enums:
+            feedback_status: { pending: [10, Pending, 待受理], processing: [20, Processing, 处理中], resolved: [30, Resolved, 已完结], suspended: [40, Suspended, 已挂起], closed: [50, Closed, 已关闭] }
+            feedback_speaker_side: { submitter: [1, Submitter, 提交侧], handler: [2, Handler, 受理侧] }

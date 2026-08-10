@@ -24,7 +24,7 @@ moo 系基础设施依赖 [`charsen/moo-scaffold`](https://github.com/charsen/mo
 
 ### 单表自引用，顶楼行 = 一条反馈
 
-`root_id` + `parent_id` 表达话题串：顶楼行（两者均 null）承载分类、状态、联系方式、多态宿主；子行只是一条发言。
+`feedback_root_id` + `feedback_parent_id` 表达话题串：顶楼行（两者均 null）承载分类、状态、联系方式、多态宿主；子行只是一条发言。
 
 这套机制学自 moo 家族的多态评论包，但**不依赖它**——评论表的「评论人 ID」是非空列（匿名访客无从表达），其姓名契约面向内部人员设计，且评论包自带的全站评论管理面会让反馈的**内部受理回复漏进公开评论列表**。
 
@@ -36,11 +36,15 @@ moo 系基础设施依赖 [`charsen/moo-scaffold`](https://github.com/charsen/mo
 
 | 字段 | 作用 |
 |---|---|
-| `submitter_id`（可空） | 有值走用户档案；null 回落 `contact_*` 快照 |
-| `speaker_side` | 提交侧 / 受理侧，与 `submitter_id` 正交 |
-| `contact_*` | 仅匿名提交时写入顶楼行 |
+| `feedback_submitter_id`（可空） | 有值走用户档案；null 回落联系方式快照 |
+| `feedback_speaker_side` | 提交侧 / 受理侧，与 submitter 正交 |
+| `feedback_contact_name` / `_organization` / `_phone` / `_email` | 仅匿名提交时写入顶楼行 |
 
-因提交人与受理人**同住 `submitter_id`**，姓名展示只需一个 resolver 契约即可覆盖双方。
+因提交人与受理人**同住 `feedback_submitter_id`**，姓名展示只需一个 resolver 契约即可覆盖双方。
+
+### 字段一律带 `feedback_` 前缀
+
+包的 `lang/*/db.php` 是扁平的「字段名 → 标签」映射，翻译合并器把各包的 `db.php` 深合并进 host——裸字段名会**跨包相撞**（家族的评论包已占了 `root_id => '顶楼评论ID'`）。故除 `id` / `deleted_at` / `created_at` / `updated_at` 外，所有语义化字段带前缀，含 `feedback_root_id` / `feedback_parent_id`。
 
 ### 分类 host 私有，状态包内封闭
 
@@ -51,7 +55,7 @@ moo 系基础设施依赖 [`charsen/moo-scaffold`](https://github.com/charsen/mo
 
 状态基线：`10` 待受理 / `20` 处理中 / `30` 已完结 / `40` 已挂起 / `50` 已关闭（无效·垃圾·重复，不计入统计）。**不开放 host 扩展**——状态驱动行为，开放则行为不确定；需要更细的分期请另开字段。
 
-「最后发言方」**不是状态**，从话题串派生，仅冗余成 `last_speaker_side` / `last_replied_at` 供列表排序预览，不参与业务判断。唯一的自动规则：`已完结` / `已关闭` 后提交侧再发言 → 自动退回 `待受理`。
+「最后发言方」**不是状态**，从话题串派生，仅冗余成 `feedback_last_speaker_side` / `feedback_last_replied_at` 供列表排序预览，不参与业务判断。唯一的自动规则：`已完结` / `已关闭` 后提交侧再发言 → 自动退回 `待受理`。
 
 ### 通知不进包
 

@@ -15,6 +15,7 @@
 namespace Mooeen\Feedback;
 
 use Illuminate\Contracts\Translation\Loader;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Mooeen\Feedback\Contracts\FeedbackTypeResolver;
 use Mooeen\Feedback\Contracts\SubmitterResolver;
@@ -58,7 +59,12 @@ class MooeenFeedbackServiceProvider extends ServiceProvider
             __DIR__ . '/../config/moo-feedback.php' => config_path('moo-feedback.php'),
         ], 'moo-feedback-config');
 
-        // TODO(M1)：管理面路由组挂载。routes/admin.php 与 Admin 控制器同属 codegen 产物，
-        // 随 scaffold/database/Feedback.yaml 生成后在此按 config('moo-feedback.admin') 挂上。
+        // 反馈统一管理面：挂到 host 的 admin 路由组（默认 'admin'，可经 config('moo-feedback.admin') 覆盖）。
+        // 路由文件用 host 注册的 Route::iResource 宏（moo 系 host 公共契约）。
+        $admin = config('moo-feedback.admin');
+        Route::middleware($admin['middleware'])
+            ->prefix($admin['prefix'])
+            ->name($admin['name'])
+            ->group(__DIR__ . '/../routes/admin.php');
     }
 }

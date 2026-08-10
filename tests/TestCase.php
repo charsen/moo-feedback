@@ -3,6 +3,8 @@
 namespace Mooeen\Feedback\Tests;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Route;
 use Mooeen\Feedback\MooeenFeedbackServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
@@ -33,10 +35,10 @@ abstract class TestCase extends Orchestra
      * host 端契约的最低替身 —— 仅为「包能 boot 起来」：
      *   - scaffold.snowflake 单例（生产由 auto-discover 的 ScaffoldProvider 绑）
      *   - scaffold 共享 OperatorResolver（当前是谁 → id，默认 GuardOperatorResolver）
+     *   - Route::iResource 宏（admin 路由文件全程用它）
+     *   - scaffold FormWidgetCollection 依赖的 Collection 宏
      *   - admin 中间件组（路由 wrap 不报错）
      *   - sqlite + 中文优先
-     *
-     * TODO(M1)：admin 路由落地后补 Route::iResource 宏 shim（host 公共契约，按控制器公开方法反射注册）。
      */
     protected function defineEnvironment($app): void
     {
@@ -54,6 +56,57 @@ abstract class TestCase extends Orchestra
             \Mooeen\Scaffold\Contracts\OperatorResolver::class,
             \Mooeen\Scaffold\Support\GuardOperatorResolver::class,
         );
+
+        // 对齐 host iResource 宏：**按控制器公开方法反射**注册路由（裁方法即裁路由），并把 destroyBatch 挂到
+        // 固定段 /batch、force 挂 /forever/{id}。naive Route::resource 会误注册不存在的 destroy 且不认
+        // destroyBatch，故此处必须用反射版 —— 本包正是靠「裁掉 store/update 即无对应路由」来收窄管理面。
+        Route::macro('iResource', function ($name, $controller) {
+            $hasAction = static function (string $action) use ($controller): bool {
+                if (! class_exists($controller)) {
+                    return false;
+                }
+                $reflection = new \ReflectionClass($controller);
+
+                return $reflection->hasMethod($action) && $reflection->getMethod($action)->isPublic();
+            };
+
+            $map = [
+                'index'        => ['get', $name, ''],
+                'create'       => ['get', $name . '/create', ''],
+                'store'        => ['post', $name, ''],
+                'trashed'      => ['get', $name . '/trashed', ''],
+                'show'         => ['get', $name . '/{id}', ''],
+                'edit'         => ['get', $name . '/{id}/edit', ''],
+                'update'       => ['put', $name . '/{id}', ''],
+                'forceDestroy' => ['delete', $name . '/forever/{id}', ''],
+                'destroyBatch' => ['delete', $name . '/batch', ''],
+                'destroy'      => ['delete', $name . '/{id}', ''],
+                'restore'      => ['patch', $name . '/restore', ''],
+            ];
+
+            foreach ($map as $action => [$verb, $uri]) {
+                if ($hasAction($action)) {
+                    Route::{$verb}($uri, [$controller, $action])->name($name . '.' . $action);
+                }
+            }
+        });
+
+        // 对齐 host AppServiceProvider 的 Collection 宏（scaffold FormWidgetCollection 依赖它们）。
+        Collection::macro('putMore', function (string $key, $value) {
+            data_set($this->items, $key, $value);
+
+            return $this;
+        });
+        Collection::macro('default', function (string $field, $value) {
+            return $this->putMore("{$field}.default", $value);
+        });
+        Collection::macro('forgetMore', function ($keys) {
+            foreach (is_array($keys) ? $keys : array_map('trim', explode(',', $keys)) as $key) {
+                data_forget($this->items, $key);
+            }
+
+            return $this;
+        });
 
         $app['router']->middlewareGroup('admin', []);
 

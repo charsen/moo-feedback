@@ -41,32 +41,40 @@ tags:
 
 ## 3. 表设计
 
-单表 `moo_feedbacks`（物理前缀 `moo_`）。**顶楼行 = 一条反馈**（`root_id` / `parent_id` 均 null），**子行 = 一条发言**（访客追加或受理方回复）。
+单表 `moo_feedbacks`（物理前缀 `moo_`）。**顶楼行 = 一条反馈**（`feedback_root_id` / `feedback_parent_id` 均 null），**子行 = 一条发言**（访客追加或受理方回复）。
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | `id` | bigint（雪花） | 主键 |
-| `root_id` | bigint 可空（索引） | 所属顶楼 ID；null = 自身是顶楼 |
-| `parent_id` | bigint 可空（索引） | 直接父行 ID；null = 顶级 |
+| `feedback_root_id` | bigint 可空（索引） | 所属顶楼 ID；null = 自身是顶楼 |
+| `feedback_parent_id` | bigint 可空（索引） | 直接父行 ID；null = 顶级 |
 | `feedbackable_type` / `feedbackable_id` | varchar(128) / bigint 可空（联合索引） | 多态宿主（存模型 FQN）；仅顶楼行 |
 | `feedbackable_title` | varchar(192) 可空 | 提交时刻宿主对象标题**写时快照**，对象改名不回溯——管理面列表免 morph eager-load |
-| `feedback_type` | varchar(32) | 分类 key（host 私有，见 §5） |
+| `feedback_type` | varchar(32) 可空 | 分类 key（host 私有，见 §5）；仅顶楼行 |
 | `feedback_status` | tinyint | 受理状态（见 §6）；仅顶楼行 |
 | `feedback_content` | text | 本行内容 |
-| `submitter_id` | bigint 可空（索引） | 有值 = 登录用户 / 受理人；null = 匿名访客 |
-| `speaker_side` | tinyint | 1 = 提交侧，2 = 受理侧 |
-| `contact_name` / `contact_organization` / `contact_phone` / `contact_email` | varchar 可空 | 匿名提交时的联系方式快照；仅顶楼行 |
-| `env_ip` / `env_device` / `env_platform` / `env_browser` / `env_page_url` | varchar 可空 | 提交环境采集（可关，见 §7）；仅顶楼行 |
-| `last_speaker_side` / `last_replied_at` | tinyint / timestamp 可空 | **派生缓存**，供列表排序与预览；不参与业务判断；仅顶楼行 |
+| `feedback_submitter_id` | bigint 可空（索引） | 有值 = 登录用户 / 受理人；null = 匿名访客 |
+| `feedback_speaker_side` | tinyint | 1 = 提交侧，2 = 受理侧 |
+| `feedback_contact_name` / `feedback_organization` / `feedback_phone` / `feedback_email` | varchar 可空 | 匿名提交时的联系方式快照；仅顶楼行 |
+| `feedback_ip` / `feedback_device` / `feedback_platform` / `feedback_browser` / `feedback_page_url` | varchar 可空 | 提交环境采集（可关，见 §7）；仅顶楼行 |
+| `feedback_last_speaker_side` / `feedback_last_replied_at` | tinyint / timestamp 可空 | **派生缓存**，供列表排序与预览；不参与业务判断；仅顶楼行 |
 | `deleted_at` / `created_at` / `updated_at` | timestamp | 软删 + 时间戳 |
 
-索引：`root_id`、`parent_id`、`submitter_id`、`feedback_status`、`(feedbackable_type, feedbackable_id)`、`env_ip`（反垃圾限流查询）。
+索引：`feedback_root_id`、`feedback_parent_id`、`feedback_submitter_id`、`feedback_status`、`(feedbackable_type, feedbackable_id)`、`feedback_ip`（反垃圾限流查询）。
 
 **多态命名** `feedbackable_*` 沿用 moo 家族既有约定（`commentable_*` / `collectable_*` / `likeable_*`），便于跨包认形状。
 
-### 3.1 话题串：单表自引用，不依赖评论包
+### 3.1 字段前缀口径：为什么连 `root_id` 都要带前缀
 
-回复层级用 `parent_id` + `root_id`——这套机制学自 moo-family 的多态评论包，但**本包不依赖它**，原因是三条硬阻断：
+包的 `lang/*/db.php` 是**扁平的「字段名 → 标签」映射**，翻译合并器把各包的 `db.php` 深合并进 host。裸字段名因此会**跨包相撞**——家族的多态评论包已经占了 `root_id => '顶楼评论ID'`，同一个 host 同时装两个包时，后合并的会覆盖前一个的标签，管理面就会显示错误的字段名。
+
+所以除 `id` / `deleted_at` / `created_at` / `updated_at` 这四个**标签全库一致、撞了也无害**的通用结构字段外，**一切语义化字段一律带 `feedback_` 前缀**，包括通常被当作结构字段的 `root_id` / `parent_id`。
+
+命名不堆无意义中段：联系方式取 `feedback_organization` / `feedback_phone` 而非 `feedback_contact_organization`，与既有项目的 `inquiry_organization` / `connection_user_ip` 风格一致。
+
+### 3.2 话题串：单表自引用，不依赖评论包
+
+回复层级用 `feedback_parent_id` + `feedback_root_id`——这套机制学自 moo-family 的多态评论包，但**本包不依赖它**，原因是三条硬阻断：
 
 1. 评论表的「评论人 ID」是**非空**列，匿名访客无从表达；
 2. 其姓名解析契约面向**内部人员**设计，不适用于外部访客；
@@ -74,7 +82,7 @@ tags:
 
 自引用同时消掉了盘点中反复出现的一个疤：把「最新回复」冗余镜像成顶楼行上的 `reply` / `replied_at` 列。**回复就是行**，不需要镜像。
 
-**约束**：业务字段（分类、状态、联系方式、多态关联、环境采集）**只在顶楼行有意义**。这是约定不是数据库约束，由模型层守门——子行禁写这些字段，写入时按 `parent` 自动推 `root_id`。
+**约束**：业务字段（分类、状态、联系方式、多态关联、环境采集）**只在顶楼行有意义**。这是约定不是数据库约束，由模型层守门——子行禁写这些字段，写入时按 `parent` 自动推 `feedback_root_id`。
 
 ---
 
@@ -83,12 +91,13 @@ tags:
 匿名访客与登录用户的区别只在「联系方式从哪来」和「能不能站内触达」，骨架完全共用。因此不拆表，由三个字段表达：
 
 ```
-submitter_id  可空 → 有值走用户档案；null 回落 contact_* 快照
-speaker_side       → 区分提交侧 / 受理侧，与 submitter_id 正交
-contact_*          → 仅匿名提交时写入顶楼行
+feedback_submitter_id  可空 → 有值走用户档案；null 回落联系方式快照
+feedback_speaker_side       → 区分提交侧 / 受理侧，与 submitter 正交
+feedback_contact_name / _organization / _phone / _email
+                            → 仅匿名提交时写入顶楼行
 ```
 
-因为提交人与受理人**同住 `submitter_id`**（靠 `speaker_side` 区分），姓名展示只需一个 resolver 契约即可覆盖双方。
+因为提交人与受理人**同住 `feedback_submitter_id`**（靠 `feedback_speaker_side` 区分），姓名展示只需一个 resolver 契约即可覆盖双方。
 
 **已知限制**：匿名访客提交后无登录态，无法回来追加第二句。表结构已支持双向多轮，但要真正打通需要「带令牌的回访链接」——**首版不做**（见 §10）。首版匿名场景的实际形态是：访客发一次 + 受理方多轮记录处理过程。
 
@@ -149,7 +158,7 @@ public function types(): array
 | `40` | `SUSPENDED` | 已挂起 |
 | `50` | `CLOSED` | 已关闭（无效 / 垃圾 / 重复，不计入统计） |
 
-**② 最后发言方不存状态**，从话题串派生，仅冗余成 `last_speaker_side` / `last_replied_at` 供列表排序与预览使用。它们是缓存，不参与业务判断。
+**② 最后发言方不存状态**，从话题串派生，仅冗余成 `feedback_last_speaker_side` / `feedback_last_replied_at` 供列表排序与预览使用。它们是缓存，不参与业务判断。
 
 三条约束：
 
@@ -190,7 +199,7 @@ public function types(): array
 | 契约 | 归属 | 作用 |
 |---|---|---|
 | `FeedbackTypeResolver` | 本包 | 声明分类目录（见 §5）；默认实现返 `OTHER` |
-| `SubmitterResolver` | 本包 | `submitter_id` → 姓名，读时批量解析，防列表 N+1；不落库不快照。因提交人与受理人同住一列，一个契约覆盖双方 |
+| `SubmitterResolver` | 本包 | `feedback_submitter_id` → 姓名，读时批量解析，防列表 N+1；不落库不快照。因提交人与受理人同住一列，一个契约覆盖双方 |
 | `OperatorResolver` | 复用 `moo-scaffold` | 「当前是谁 → id」，写入受理方发言时取操作人；本包不自造 |
 
 **事件**（包只派事件，不投递通知）：
