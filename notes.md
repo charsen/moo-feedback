@@ -56,3 +56,21 @@
 - **根因**：宿主自身的模块包化迁移做了一半：host 的 `scaffold/database/*.yaml` 没删，与包里的同名 schema 重复定义了若干张表。工具对「表名全局唯一」是 fail-fast，不做 last-wins 兜底。
 - **解法**：临时把 host 侧那份 yaml 挪走再跑生成（包里的 schema 通常是超集，ACL / i18n 不会丢条目），生成完放回。根治要由宿主项目自己删掉 host 侧的重复 yaml。**教训**：借别人的项目当 codegen 宿主前，先跑一次 `moo:fresh` 确认它的管线是通的。
 
+---
+
+### 脱敏要扫历史，不是只扫工作树
+
+- **日期**：2026-08-10
+- **症状**：把 notes.md 里写死的宿主项目名与它的内部迁移状态脱敏、单独提一个 commit «xx 脱敏» 之后，`git grep` 工作树已经零命中，但 `git log -p --all | grep` 仍能翻出原文——脱敏 commit 只是又写了一遍，旧内容原封不动躺在被它修正的那个 commit 里。开源仓推出去就等于连历史一起公开。
+- **根因**：把「改文件」当成了「去掉信息」。git 的每次修改都是追加，不是覆盖。
+- **解法**：推之前用**两条**命令验收，缺一不可：`git grep -inE "<敏感词>"`（工作树）+ `git log -p --all --reflog | grep -inE "<敏感词>"`（全历史含悬挂对象）。仓没推过时改写零代价：`git checkout -b scrub <首次引入的 commit>` → `git checkout <脱敏 commit> -- <文件>` → `--amend` → cherry-pick 后续 commit（脱敏那条会变空，直接丢弃）。改写完必须验 `git diff <旧 HEAD> <新 HEAD> --stat` 为空（证明树完全一致，只动了历史），再 `git reflog expire --expire=now --all && git gc --prune=now` 把旧对象删净。**教训**：敏感信息在第一次 commit 前就不该落盘；已经落了就别只写脱敏 commit。
+
+---
+
+### 没有 gh CLI 也能设 GitHub Actions secrets：用 PHP 的 sodium
+
+- **日期**：2026-08-10
+- **症状**：新开公开镜像仓要配 `MIRROR_GITHUB_TOKEN` / `GITEE_TOKEN` 两个 secret，机器上没装 `gh`，Python 也没有 `pynacl`；`cryptography` 有 X25519 但没有 XSalsa20-Poly1305，凑不出 GitHub 要的 sealed box。
+- **根因**：GitHub secrets API 要求值用仓库公钥做 libsodium `crypto_box_seal`，纯手写不现实。
+- **解法**：PHP 自带 sodium 扩展，一行就够——`GET /repos/{o}/{r}/actions/secrets/public-key` 拿 `key`（base64）与 `key_id`，然后 `php -r 'echo base64_encode(sodium_crypto_box_seal(getenv("SEC"), base64_decode(getenv("PK"))));'`，再 `PUT .../actions/secrets/{NAME}` 带 `{encrypted_value, key_id}`，201 即成功。明文只经环境变量传递，不进命令行参数（`ps` 可见）也不进日志。配完 `workflow_dispatch` 触发一次镜像流水线做验收，别等 cron。
+
