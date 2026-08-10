@@ -17,10 +17,24 @@ trait FeedbackTrait
 {
     /**
      * 列表的查询字段
+     *
+     * 相对生成物做了取舍：列表页只查「列表要用的」，环境采集（ip / device / platform / browser /
+     * page_url）与联系方式细项（organization / phone）都只在详情页有意义，列表不查也不显示 ——
+     * 一屏二十列没人看得下去，且访客 IP、手机号这类数据不该在列表页无差别铺开。
+     *
+     * feedback_content 反而必须查：反馈列表不给内容预览，受理人员每条都得点进去才知道是什么事。
      */
     private function getListFields(string $action = 'index'): array
     {
-        $fields = ['id', 'feedback_root_id', 'feedback_parent_id', 'feedbackable_type', 'feedbackable_id', 'feedbackable_title', 'feedback_type', 'feedback_status', 'feedback_submitter_id', 'feedback_speaker_side', 'feedback_contact_name', 'feedback_organization', 'feedback_phone', 'feedback_email', 'feedback_ip', 'feedback_device', 'feedback_platform', 'feedback_browser', 'feedback_page_url', 'feedback_last_speaker_side', 'feedback_last_replied_at', 'created_at'];
+        $fields = [
+            'id',
+            'feedbackable_type', 'feedbackable_id', 'feedbackable_title',
+            'feedback_type', 'feedback_status', 'feedback_content',
+            'feedback_submitter_id',
+            'feedback_contact_name', 'feedback_email',
+            'feedback_last_speaker_side', 'feedback_last_replied_at',
+            'created_at',
+        ];
 
         if ($action === 'index') {
             $append = ['updated_at'];
@@ -33,30 +47,22 @@ trait FeedbackTrait
 
     /**
      * 列表的表头
+     *
+     * feedback_root_id / feedback_parent_id 是话题串的结构字段，对受理人员没有意义（列表本就只出
+     * 顶楼行，这两列恒为 null），一律不进表头。
+     *
+     * feedback_contact_name 给 slot：提交人一格里同时要显示姓名与邮箱，各 host 的排版口径不同，
+     * 交给前端插槽而不是在包里拼字符串。
      */
     private function getListColumns(string $action = 'index'): TableColumnsCollection
     {
         $columns = [
-            'feedback_root_id',
-            'feedback_parent_id',
-            'feedbackable_type',
-            'feedbackable_id',
-            'feedbackable_title',
-            'feedback_type',
-            'feedback_status_txt',
-            'feedback_submitter_id',
-            'feedback_speaker_side_txt',
-            'feedback_contact_name',
-            'feedback_organization',
-            'feedback_phone',
-            'feedback_email',
-            'feedback_ip',
-            'feedback_device',
-            'feedback_platform',
-            'feedback_browser',
-            'feedback_page_url',
-            'feedback_last_speaker_side',
-            'feedback_last_replied_at',
+            'feedback_type_txt'              => ['width' => 120],
+            'feedback_contact_name'          => ['type' => 'slot', 'width' => 180],
+            'feedback_content'               => ['type' => 'slot'],
+            'feedback_status_txt'            => ['width' => 100],
+            'feedback_last_speaker_side_txt' => ['width' => 110],
+            'feedback_last_replied_at'       => ['width' => 165],
         ];
 
         return TableColumnsCollection::makeColumns($columns, $action);

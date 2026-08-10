@@ -84,3 +84,57 @@ it('字段词条不与其它包相撞 —— 语义字段全带 feedback_ 前缀
         expect($field)->toStartWith('feedback');
     }
 });
+
+it('分类 _txt 经 host 目录解析（feedback_type 无 enums，codegen 产不出这个访问器）', function () {
+    $fb = Feedback::submit(['feedback_type' => 'SUPPORT', 'feedback_content' => '这是一条正常的反馈内容']);
+
+    expect($fb->feedback_type_txt)->toBe('技术支持')
+        ->and($fb->toArray())->toHaveKey('feedback_type_txt');
+});
+
+it('目录里查不到的分类原样回显，不返空白', function () {
+    // 历史分类被 host 从目录撤下的情形：显示 LEGACY_X 也远好过显示空白
+    $fb = Feedback::submit(['feedback_type' => 'SUPPORT', 'feedback_content' => '这是一条正常的反馈内容']);
+    $fb->forceFill(['feedback_type' => 'LEGACY_X'])->save();
+
+    expect($fb->fresh()->feedback_type_txt)->toBe('LEGACY_X');
+});
+
+it('最后发言方 _txt 有值，且子行上为 null', function () {
+    $fb    = Feedback::submit(['feedback_type' => 'SUPPORT', 'feedback_content' => '这是一条正常的反馈内容']);
+    $child = $fb->appendMessage('已受理', FeedbackSpeakerSide::HANDLER, '9001');
+
+    expect($fb->fresh()->feedback_last_speaker_side_txt)->toBe('受理侧')
+        ->and($child->feedback_last_speaker_side_txt)->toBeNull(); // 派生缓存只在顶楼行
+});
+
+it('行内动作里没有编辑笔 —— 包没有 update 路由，摆一支必然 404 的笔是错的', function () {
+    $fb = Feedback::submit(['feedback_type' => 'SUPPORT', 'feedback_content' => '这是一条正常的反馈内容']);
+
+    $types = collect($fb->options)->pluck('type')->all();
+
+    expect($types)->toBe(['handle', 'destroy']);
+
+    $fb->delete();
+    expect(collect($fb->fresh()->options)->pluck('type')->all())->toBe(['restore', 'force-destroy']);
+});
+
+it('列表表头是裁剪过的受理视图，不是全字段倾倒', function () {
+    $columns = (new ReflectionClass(\Mooeen\Feedback\Http\Controllers\Admin\FeedbackController::class))
+        ->getMethod('getListColumns');
+    $columns->setAccessible(true);
+
+    $keys = collect($columns->invoke(app(\Mooeen\Feedback\Http\Controllers\Admin\FeedbackController::class))
+        ->toArray(request()))->pluck('field')->all();
+
+    // 内容预览必须在：列表不给内容，受理人员每条都得点进去才知道是什么事
+    expect($keys)->toContain('feedback_content')
+        ->and($keys)->toContain('feedback_type_txt')
+        ->and($keys)->toContain('feedback_status_txt')
+        // 话题串结构字段与环境采集不进列表：前者对受理人员无意义（列表本就只出顶楼行），
+        // 后者含访客 IP 这类数据，不该在列表页无差别铺开
+        ->and($keys)->not->toContain('feedback_root_id')
+        ->and($keys)->not->toContain('feedback_parent_id')
+        ->and($keys)->not->toContain('feedback_ip')
+        ->and($keys)->not->toContain('feedback_phone');
+});

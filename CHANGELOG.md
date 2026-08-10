@@ -24,11 +24,19 @@
 - 管理面 `Admin\FeedbackController` + `routes/admin.php`：只读 + 清理 + 受理（reply / transition），**无 store / update / create / edit**
 - 前台提交入口 `Web\FeedbackController` + `routes/web.php` + `SubmitRequest`：`POST {prefix}/feedbacks` 与 `GET {prefix}/feedbacks/meta`，**默认关闭**需 host 显式开启；蜜罐静默拦截与成功返回不可区分、不返回反馈 ID、多态宿主只认 morph 别名
 - 中英词条 `lang/{zh-CN,en}/{db,model,validation}.php`
-- 测试 61 项（骨架 / 机制层 / 反垃圾 / 管理面路由面 / 前台提交）
+- 测试 66 项（骨架 / 机制层 / 反垃圾 / 管理面路由面与表头 / 前台提交）
 
 ### Changed
 
 - ServiceProvider 挂上管理面路由组（此前为 M1 待办占位）
+- **管理面列表裁成受理视图**（M2 首个 host 落地暴露的问题）：codegen 原样输出的表头是 20 列全字段倾倒，含 `feedback_root_id` / `feedback_parent_id`（列表只出顶楼行，这两列恒为 null）与访客 IP 等环境采集，却唯独没查 `feedback_content` —— 受理人员每条都得点进去才知道是什么事。现列表只留分类 / 提交人 / 内容预览 / 状态 / 最后发言方与时间
+- **行内动作去掉编辑笔**：scaffold 的 `Optional` 默认无条件给 `edit`，但本包刻意没有 update / edit 路由，那支笔点下去必然 404。改为 `handle`（受理）—— 看话题串、回复、置位状态一处入口。host 前端须渲染 `#option_handle` 插槽
+
+### Added（M2 落地补齐）
+
+- `Feedback::$feedback_type_txt` —— 分类展示名经 `FeedbackTypeResolver` 解析。分类是 host 私有的 varchar key、没有 enums 块，codegen 产不出这个访问器；目录里查不到的 key 原样回显而不返空白（历史分类被撤下时，显示 `LEGACY_X` 好过显示空白）
+- `Feedback::$feedback_last_speaker_side_txt` —— 派生缓存列的展示名（与 `feedback_speaker_side` 同枚举但属另一列，生成器不为它产 _txt）
+- 两个访问器经业务区的 `EXTRA_APPENDS` 并入 `$appends`，不改生成区，`moo:free --force` 重生成不会冲掉
 
 ### 待办
 

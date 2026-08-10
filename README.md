@@ -128,6 +128,18 @@ php artisan vendor:publish --tag=moo-feedback-config
 
 3. 业务模型 `use Feedbackable` 即可被反馈关联（可选，仅 `requires_target` 类分类需要）。
 
+### 管理面前端的一个约定
+
+moo 系包出接口与 ACL，页面由各 host 自己的管理端仓库实现。反馈的管理面比一般 CRUD 多一步：
+
+列表的行内动作里**没有编辑笔**（包没有 update 路由，摆一支必然 404 的笔是错的），取而代之是 `handle`（受理）。host 前端需要为它渲染一个入口，点开后在同一个对话框里完成三件事：
+
+- 展示整条话题串（`GET {prefix}/feedbacks/{id}` 的 `data` + `thread`）
+- 回复：`POST {prefix}/feedbacks/{id}/reply`，body `{feedback_content}`
+- 置位状态：`PATCH {prefix}/feedbacks/{id}/transition`，body `{feedback_status}`；可选值由 show 响应的 `statuses` 给出
+
+若 host 未实现该入口，前端会显示占位文本而不是静默失效 —— 这是有意的，漏实现要看得见。
+
 ## 反垃圾
 
 匿名提交入口不做这个，上线即被灌。包内提供三样，全部 config 可调：**提交限流**（同 IP / 同邮箱时间窗次数上限）、**蜜罐字段**（隐藏字段有值即静默丢弃）、**内容长度上下限**。

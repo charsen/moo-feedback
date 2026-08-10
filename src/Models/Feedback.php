@@ -141,6 +141,63 @@ class Feedback extends Model
     // ===== 手写业务区（首次生成后自持；moo:free 非 --force 重生成不覆盖本类）=====
 
     /**
+     * 包自持的补充 _txt 访问器。
+     *
+     * codegen 只为「在 yaml 里声明了 enums 的列」产出 _txt 并写进上方 $appends，这两个都不在其列：
+     *   - feedback_type 是 host 私有的 varchar key，压根没有 enums 块（见 docs/overview.md §5）；
+     *   - feedback_last_speaker_side 与 feedback_speaker_side 共用同一套取值，但它是另一列，
+     *     yaml 里没有重复声明 enums，故生成器不为它产 _txt。
+     *
+     * 不直接改上方的 $appends —— 那是生成区，`moo:free --force` 会原样覆盖回去。
+     */
+    private const EXTRA_APPENDS = ['feedback_type_txt', 'feedback_last_speaker_side_txt'];
+
+    /** 分类目录的每请求缓存：列表一页 N 行都要查目录，host 的实现可能是读库的。 */
+    private static ?array $typesCache = null;
+
+    public function __construct(array $attributes = [])
+    {
+        $this->appends = array_values(array_unique([...$this->appends, ...self::EXTRA_APPENDS]));
+
+        parent::__construct($attributes);
+    }
+
+    /**
+     * 获取 分类 TXT（经 host 的 FeedbackTypeResolver 解析）。
+     *
+     * 目录里查不到的 key **原样回显**而不是返 null：库里的历史分类可能已被 host 从目录中撤下，
+     * 这时管理面显示 `LEGACY_X` 也远好过显示空白 —— 后者会让受理人员以为这条反馈没有分类。
+     */
+    public function getFeedbackTypeTxtAttribute(): ?string
+    {
+        $key = (string) ($this->feedback_type ?? '');
+
+        if ($key === '') {
+            return null;
+        }
+
+        self::$typesCache ??= app(FeedbackTypeResolver::class)->types();
+
+        $label = self::$typesCache[$key]['label'] ?? null;
+
+        return $label === null ? $key : (string) __($label);
+    }
+
+    /** 获取 最后发言方 TXT（派生缓存列，仅顶楼行有值）。 */
+    public function getFeedbackLastSpeakerSideTxtAttribute(): ?string
+    {
+        if ($this->feedback_last_speaker_side === null) {
+            return null;
+        }
+
+        try {
+            return FeedbackSpeakerSide::from((int) $this->feedback_last_speaker_side)->label();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
      * 提交一条反馈（写入口单一真值源；Feedbackable::receiveFeedback() 亦委托到此）。
      *
      * 顺序刻意如此：先校验分类（便宜、无副作用）→ 再过反垃圾（要查库）→ 最后才落行。
@@ -284,6 +341,28 @@ class Feedback extends Model
     public function scopeRoots(Builder $query): Builder
     {
         return $query->whereNull('feedback_root_id');
+    }
+
+    /**
+     * 行内可操作动作。
+     *
+     * **整个覆盖** scaffold Optional 的默认实现，而不是靠它提供的两个开关：默认实现无条件给
+     * `edit`，可本包刻意没有 update / edit 路由（反馈的写入口永远在业务侧，状态也只能走状态机），
+     * 列表上摆一支点下去必然 404 的编辑笔是错的。
+     *
+     * 取而代之给 `handle`（受理）—— 这是本包管理面的核心动作，一处入口涵盖：看整条话题串、
+     * 回复（POST feedbacks/{id}/reply）、置位状态（PATCH feedbacks/{id}/transition）。
+     *
+     * ⚠ host 前端须为它渲染 `#option_handle` 插槽（moo 系约定：包出接口与 ACL，各 host 的
+     *   管理端仓库出页面）。未实现时前端会显示占位文本，而不是静默失效。
+     */
+    public function getOptionsAttribute(): array
+    {
+        if ($this->deleted_at !== null) {
+            return [['type' => 'restore'], ['type' => 'force-destroy']];
+        }
+
+        return [['type' => 'handle'], ['type' => 'destroy']];
     }
 
     public function isRoot(): bool
