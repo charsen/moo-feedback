@@ -66,5 +66,15 @@ class MooeenFeedbackServiceProvider extends ServiceProvider
             ->prefix($admin['prefix'])
             ->name($admin['name'])
             ->group(__DIR__ . '/../routes/admin.php');
+
+        // 前台提交入口：**默认关闭**，host 显式开启才挂载。
+        // 这是匿名可写的公开接口，装上包就多一个对外写入口是坏默认（见 config 注释）。
+        $public = config('moo-feedback.public');
+        if ($public['enabled'] ?? false) {
+            Route::middleware($public['middleware'])
+                ->prefix($public['prefix'])
+                ->name($public['name'])
+                ->group(__DIR__ . '/../routes/web.php');
+        }
     }
 }

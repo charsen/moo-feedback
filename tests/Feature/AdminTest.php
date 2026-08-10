@@ -41,6 +41,10 @@ it('写入口不在管理面 —— store/update/create/edit 一律没有路由'
     'admin.feedbacks.edit',
 ]);
 
+it('前台提交入口默认不挂载 —— 匿名可写的公开接口不能是默认开启', function (string $name) {
+    expect(routeNames())->not->toContain($name);
+})->with(['feedback.store', 'feedback.meta']);
+
 it('列表只出顶楼行，按最后发言时间倒序', function () {
     $older = Feedback::submit(['feedback_type' => 'SUPPORT', 'feedback_content' => '较早的一条反馈内容']);
     $newer = Feedback::submit(['feedback_type' => 'SUPPORT', 'feedback_content' => '较新的一条反馈内容']);

@@ -22,8 +22,9 @@
 - `Support\AntiSpamGuard` 反垃圾三件套（限流 / 蜜罐 / 长度）与 `Support\EnvironmentCapture` 环境采集
 - 异常 `SpamRejected`（区分静默拦截）与 `InvalidFeedbackType`
 - 管理面 `Admin\FeedbackController` + `routes/admin.php`：只读 + 清理 + 受理（reply / transition），**无 store / update / create / edit**
+- 前台提交入口 `Web\FeedbackController` + `routes/web.php` + `SubmitRequest`：`POST {prefix}/feedbacks` 与 `GET {prefix}/feedbacks/meta`，**默认关闭**需 host 显式开启；蜜罐静默拦截与成功返回不可区分、不返回反馈 ID、多态宿主只认 morph 别名
 - 中英词条 `lang/{zh-CN,en}/{db,model,validation}.php`
-- 测试 50 项（骨架 / 机制层 / 反垃圾 / 管理面路由面）
+- 测试 61 项（骨架 / 机制层 / 反垃圾 / 管理面路由面 / 前台提交）
 
 ### Changed
 

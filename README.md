@@ -65,10 +65,28 @@ moo 系基础设施依赖 [`charsen/moo-scaffold`](https://github.com/charsen/mo
 
 | 面 | 入口 |
 |---|---|
+| **提交反馈（PHP）** | `Feedback::submit($attrs, $target)` —— 单一真值源：分类校验 → 反垃圾 → 落行 → 派事件 |
+| **提交反馈（业务模型）** | `$product->receiveFeedback($attrs)`（`use Feedbackable` 后可用） |
+| **提交反馈（HTTP）** | `POST {prefix}/feedbacks` + `GET {prefix}/feedbacks/meta`，**默认关闭**，见下 |
+| **后台受理** | `api/admin/feedbacks`：列表 / 详情 / 回复 / 状态流转 / 清理，**无 store / update** |
 | **分类目录** | host 实现 `Contracts\FeedbackTypeResolver`，在自己的 provider 里 bind |
 | **发言人姓名** | host 实现 `Contracts\SubmitterResolver`（读时批量，防 N+1） |
 | **当前操作人** | 复用 scaffold 共享 `OperatorResolver`，本包不自造 |
 | **文本脱敏** | `Support\SecretRedactor`：打码 JWT / Bearer / `password=` 等凭证类模式；**刻意不打码** 手机号等 PII（打码后无法照搬复现问题，PII 由访问控制兜底） |
+
+### 前台提交入口默认关闭
+
+这是**匿名可写**的公开接口，装上包就悄悄多一个对外写入口是坏默认。host 显式开启：
+
+```php
+// config/moo-feedback.php
+'public' => [
+    'enabled'          => true,
+    'required_contact' => ['feedback_contact_name', 'feedback_email'],
+],
+```
+
+三个安全设计：**成功与蜜罐静默拦截返回完全相同的响应**（`201 {"submitted": true}`，不返回反馈 ID）——二者必须对脚本作者不可区分；**多态宿主只认 morph 别名**（`target=product`），不接受前端直传模型 FQN；**必填联系方式由 config 决定**，各 host 口径不同。
 
 ## 安装
 

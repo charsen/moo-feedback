@@ -13,6 +13,27 @@ return [
         'middleware' => env('MOO_FEEDBACK_ADMIN_MIDDLEWARE', 'admin'),
     ],
 
+    // 前台提交入口（访客 / 登录用户填表提交）。
+    //
+    // ⚠ 默认关闭，host 必须显式开启 —— 这是一个**匿名可写**的公开接口，装上包就悄悄多一个
+    //   对外写入口是坏默认。不开启时包只提供 PHP 级写入口 Feedback::submit()，host 自行接管。
+    'public' => [
+        'enabled' => env('MOO_FEEDBACK_PUBLIC', false),
+        'prefix'  => 'api',
+        'name'    => 'feedback.',
+        // throttle 是 Laravel 层的粗粒度闸门，与包内 anti_spam 的业务限流互补：
+        // 前者挡住暴力刷接口，后者按 IP / 邮箱限制真实提交量。
+        'middleware' => ['api', 'throttle:30,1'],
+
+        // 联系方式哪些必填 —— 各 host 口径不同（有的要企业名，有的只要邮箱），故不在包里写死。
+        'required_contact' => ['feedback_contact_name'],
+
+        // 允许前台指定的多态宿主：morph 别名 => 是否放行。
+        // 只认 host 在 Relation::morphMap() 里注册过的别名，**不接受**前端直传模型 FQN
+        // —— 那等于让客户端指定要实例化哪个类。
+        'allow_target' => true,
+    ],
+
     // 提交环境采集（仅顶楼行）。用途有二：受理时复现问题，以及作为反垃圾限流的维度。
     // host 若有合规要求不得留存访客 IP，整体关掉即可，不影响其余能力。
     'capture' => [
