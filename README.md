@@ -128,6 +128,30 @@ php artisan vendor:publish --tag=moo-feedback-config
 
 3. 业务模型 `use Feedbackable` 即可被反馈关联（可选，仅 `requires_target` 类分类需要）。
 
+### 后台路由安全配置（必做）
+
+包配置默认的 `admin` 只是兼容性路由组名，不保证 host 的该组含强制认证。host 必须在 `bootstrap/app.php` 为反馈包建立独立后台组，并让发布后的 `config/moo-feedback.php` 指向它；不要借用放行登录接口的 `admin` 或其他扩展包的组：
+
+```php
+// bootstrap/app.php -> withMiddleware()
+$packageAdminMiddleware = [
+    'jwt.assign.guard:admin',
+    'jwt.guard.auth:admin',
+    'jwt.auth.refresh',
+    'throttle:admin',
+    'set.locale',
+    \Illuminate\Routing\Middleware\SubstituteBindings::class,
+];
+$middleware->appendToGroup('moo-feedback', $packageAdminMiddleware);
+```
+
+```php
+// config/moo-feedback.php
+'admin' => ['prefix' => 'api/admin', 'name' => 'admin.', 'middleware' => 'moo-feedback'],
+```
+
+中间件类名可按 host 调整，但完整链必须包含 admin 守卫、强制认证、续签/过期处理、限流和路由绑定。验收：匿名访问 `/api/admin/feedbacks` 返回 401，已登录但无反馈 ACL 返回 403，授权账号成功。匿名提交入口继续使用 `public.middleware`、业务限流和蜜罐，不要套后台认证组。
+
 ### 管理面前端的一个约定
 
 moo 系包出接口与 ACL，页面由各 host 自己的管理端仓库实现。反馈的管理面比一般 CRUD 多一步：
