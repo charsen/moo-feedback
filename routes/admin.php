@@ -1,5 +1,16 @@
 <?php declare(strict_types=1);
 /*
+ * @Author: Charsen
+ * @Date: 2026-08-10 17:46
+ * @LastEditors: Charsen
+ * @LastEditTime: 2026-08-11 10:24
+ * @Description:
+ */
+
+use Illuminate\Support\Facades\Route;
+use Mooeen\Feedback\Http\Controllers\Admin\FeedbackController;
+
+/*
  * 意见反馈后台路由 —— 由 MooeenFeedbackServiceProvider 挂到 host 的 admin 组
  * （默认 prefix=api/admin、name=admin.，可经 config('moo-feedback.admin') 覆盖）。
  * 控制器用 host 注册的 Route::iResource 宏（moo 系 host 公共契约，按控制器公开方法反射注册）。
@@ -12,15 +23,13 @@
  * reply / transition 不在 iResource 的约定动作表内，故显式声明于锚点下方。
  */
 
-// scaffold 生成器路由插入锚点(plan-45)，别删
-
 // FeedbackController
-Route::iResource('feedbacks', \Mooeen\Feedback\Http\Controllers\Admin\FeedbackController::class);
-
-// :insert_code_here:do_not_delete
+Route::iResource('feedbacks', FeedbackController::class);
 
 // 受理动作：话题串追加受理侧发言 / 手动置位状态
-Route::post('feedbacks/{id}/reply', [\Mooeen\Feedback\Http\Controllers\Admin\FeedbackController::class, 'reply'])
+Route::post('feedbacks/{id}/reply', [FeedbackController::class, 'reply'])
     ->name('feedbacks.reply');
-Route::patch('feedbacks/{id}/transition', [\Mooeen\Feedback\Http\Controllers\Admin\FeedbackController::class, 'transition'])
+Route::patch('feedbacks/{id}/transition', [FeedbackController::class, 'transition'])
     ->name('feedbacks.transition');
+
+// :insert_code_here:do_not_delete

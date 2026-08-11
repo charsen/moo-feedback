@@ -1,5 +1,16 @@
 <?php declare(strict_types=1);
 /*
+ * @Author: Charsen
+ * @Date: 2026-08-10 19:55
+ * @LastEditors: Charsen
+ * @LastEditTime: 2026-08-11 10:29
+ * @Description:
+ */
+
+use Illuminate\Support\Facades\Route;
+use Mooeen\Feedback\Http\Controllers\Web\FeedbackController;
+
+/*
  * 意见反馈前台路由 —— 由 MooeenFeedbackServiceProvider 在
  * config('moo-feedback.public.enabled') 为真时挂载(默认关闭)。
  *
@@ -9,9 +20,9 @@
  *   - store 不返回反馈 ID,且与蜜罐静默拦截返回完全相同的响应。
  */
 
-Route::post('feedbacks', [\Mooeen\Feedback\Http\Controllers\Web\FeedbackController::class, 'store'])
+Route::post('feedbacks', [FeedbackController::class, 'store'])
     ->name('store');
 
 // 表单渲染元信息:分类目录、蜜罐字段名、内容长度上下限、必填联系方式
-Route::get('feedbacks/meta', [\Mooeen\Feedback\Http\Controllers\Web\FeedbackController::class, 'meta'])
+Route::get('feedbacks/meta', [FeedbackController::class, 'meta'])
     ->name('meta');
