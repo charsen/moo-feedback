@@ -232,9 +232,15 @@ class Feedback extends Model
                 'feedback_status'       => FeedbackStatus::PENDING->value,
             ],
             $target === null ? [] : [
-                'feedbackable_type'  => $target->getMorphClass(),
-                'feedbackable_id'    => $target->getKey(),
-                'feedbackable_title' => method_exists($target, 'feedbackTitle') ? $target->feedbackTitle() : null,
+                'feedbackable_type' => $target->getMorphClass(),
+                'feedbackable_id'   => $target->getKey(),
+                // 标题快照三级回落：$attrs 显式给的 > 宿主的 feedbackTitle() > null。
+                //
+                // $attrs 优先是必要的：宿主未必是 host 自己的模型 —— 它可能来自另一个 moo 包
+                // （如从 moo-product 的产品发起采购咨询），host 加不了 Feedbackable trait，
+                // 也不该为了一个标题去继承包的模型。而调用方手上本就有这个对象，知道哪个字段是标题。
+                'feedbackable_title' => $attrs['feedbackable_title']
+                    ?? (method_exists($target, 'feedbackTitle') ? $target->feedbackTitle() : null),
             ],
         ));
 

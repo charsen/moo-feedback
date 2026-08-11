@@ -66,6 +66,21 @@ it('带宿主提交：多态三列写入，标题写时快照', function () {
     expect($fb->fresh()->feedbackable_title)->toBe('五轴加工中心');
 });
 
+it('宿主不是自家模型时，标题可由调用方显式给出', function () {
+    // 现实场景：宿主来自另一个 moo 包（如从产品包的产品发起采购咨询），
+    // host 加不了 Feedbackable trait，也不该为一个标题去继承别人的模型
+    $product = Product::create(['title' => '五轴加工中心']);
+
+    $fb = Feedback::submit([
+        'feedback_type'      => 'SALES',
+        'feedback_content'   => '想咨询这台设备的报价与交期',
+        'feedbackable_title' => '手工给定的标题',
+    ], $product);
+
+    expect($fb->feedbackable_title)->toBe('手工给定的标题')       // 显式值胜出
+        ->and($fb->feedbackable_id)->toBe((string) $product->getKey()); // 多态列仍取自宿主本身
+});
+
 it('宿主的 feedbacks 关系只取顶楼行 —— 子行是发言，不该混进对象的反馈列表', function () {
     $product = Product::create(['title' => '设备 A']);
     $fb      = $product->receiveFeedback(['feedback_type' => 'SALES', 'feedback_content' => '请问有现货吗']);

@@ -24,7 +24,7 @@
 - 管理面 `Admin\FeedbackController` + `routes/admin.php`：只读 + 清理 + 受理（reply / transition），**无 store / update / create / edit**
 - 前台提交入口 `Web\FeedbackController` + `routes/web.php` + `SubmitRequest`：`POST {prefix}/feedbacks` 与 `GET {prefix}/feedbacks/meta`，**默认关闭**需 host 显式开启；蜜罐静默拦截与成功返回不可区分、不返回反馈 ID、多态宿主只认 morph 别名
 - 中英词条 `lang/{zh-CN,en}/{db,model,validation}.php`
-- 测试 66 项（骨架 / 机制层 / 反垃圾 / 管理面路由面与表头 / 前台提交）
+- 测试 67 项（骨架 / 机制层 / 反垃圾 / 管理面路由面与表头 / 前台提交）
 
 ### Changed
 
@@ -35,6 +35,7 @@
 ### Added（M2 落地补齐）
 
 - `Feedback::$feedback_type_txt` —— 分类展示名经 `FeedbackTypeResolver` 解析。分类是 host 私有的 varchar key、没有 enums 块，codegen 产不出这个访问器；目录里查不到的 key 原样回显而不返空白（历史分类被撤下时，显示 `LEGACY_X` 好过显示空白）
+- `feedbackable_title` 支持由调用方经 `$attrs` 显式给出，优先于宿主的 `feedbackTitle()`：宿主未必是 host 自家模型（如从 `moo-product` 的产品发起采购咨询），host 加不了 `Feedbackable` trait，也不该为一个标题去继承别人的包模型
 - `Feedback::$feedback_last_speaker_side_txt` —— 派生缓存列的展示名（与 `feedback_speaker_side` 同枚举但属另一列，生成器不为它产 _txt）
 - 两个访问器经业务区的 `EXTRA_APPENDS` 并入 `$appends`，不改生成区，`moo:free --force` 重生成不会冲掉
 
