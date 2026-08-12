@@ -75,7 +75,9 @@ class Feedback extends Model
     use GetSerializeDate;
     use GetUpdatedAtHumanTime;
     use Optional;
-    use SoftDeletes;
+    use SoftDeletes {
+        forceDelete as private forceDeleteSelf;
+    }
     use UsingSnowFlakePrimaryKey;
 
     /**
@@ -374,6 +376,27 @@ class Feedback extends Model
     public function isRoot(): bool
     {
         return $this->feedback_root_id === null;
+    }
+
+    /**
+     * 永久删除顶楼反馈时，同时清理整条话题串。
+     *
+     * 软删除仍只隐藏顶楼行，恢复后原话题串可继续使用；只有明确永久删除时才在同一事务内
+     * 逐条 forceDelete 子行，确保模型事件仍会触发，也避免根行已删但回复残留成孤儿数据。
+     */
+    public function forceDelete()
+    {
+        return $this->getConnection()->transaction(function () {
+            if ($this->isRoot()) {
+                $this->thread()
+                    ->withTrashed()
+                    ->get()
+                    ->each
+                    ->forceDelete();
+            }
+
+            return $this->forceDeleteSelf();
+        });
     }
 
     /**
