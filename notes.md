@@ -74,3 +74,11 @@
 - **根因**：GitHub secrets API 要求值用仓库公钥做 libsodium `crypto_box_seal`，纯手写不现实。
 - **解法**：PHP 自带 sodium 扩展，一行就够——`GET /repos/{o}/{r}/actions/secrets/public-key` 拿 `key`（base64）与 `key_id`，然后 `php -r 'echo base64_encode(sodium_crypto_box_seal(getenv("SEC"), base64_decode(getenv("PK"))));'`，再 `PUT .../actions/secrets/{NAME}` 带 `{encrypted_value, key_id}`，201 即成功。明文只经环境变量传递，不进命令行参数（`ps` 可见）也不进日志。配完 `workflow_dispatch` 触发一次镜像流水线做验收，别等 cron。
 
+---
+
+### 永久删除顶楼反馈必须同步清理整条话题串
+
+- **日期**：2026-08-12
+- **症状**：后台永久删除顶楼反馈接口返回 200，但其回复子行仍留在 `moo_feedbacks`，形成无法从正常列表访问的孤儿数据。
+- **根因**：通用 `forceDestroyAction()` 只对当前顶楼模型调用 `forceDelete()`；表内自引用没有数据库外键级联，模型也未补话题串清理逻辑。
+- **解法**：在 `Feedback` 模型手写区覆盖 `forceDelete()`；永久删除顶楼行时，在同一数据库事务内逐条永久删除 `thread()->withTrashed()` 中的全部发言，再删除顶楼行。软删除与恢复继续只作用于顶楼行，以保留可恢复的话题串。

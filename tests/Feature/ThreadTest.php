@@ -184,6 +184,30 @@ it('roots 作用域只出顶楼行', function () {
         ->and($fb->thread()->count())->toBe(2);
 });
 
+it('永久删除顶楼反馈会清理整条话题串，软删恢复仍保留回复', function () {
+    $root   = submitOne();
+    $first  = $root->appendMessage('第一层回复', FeedbackSpeakerSide::HANDLER, '9001');
+    $second = $root->appendMessage(
+        '第二层回复',
+        FeedbackSpeakerSide::SUBMITTER,
+        parent: $first,
+    );
+    $ids = [$root->getKey(), $first->getKey(), $second->getKey()];
+
+    $root->delete();
+
+    expect(Feedback::withTrashed()->whereKey($ids)->count())->toBe(3);
+
+    $root->restore();
+
+    expect($root->fresh()->thread()->count())->toBe(2);
+
+    $root->delete();
+    $root->forceDelete();
+
+    expect(Feedback::withTrashed()->whereKey($ids)->count())->toBe(0);
+});
+
 it('内容读时打码凭证，库中原值不变', function () {
     $fb = submitOne(['feedback_content' => '登录报错，我的 token=abc123secret 贴给你们']);
 
