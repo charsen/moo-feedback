@@ -20,10 +20,17 @@ use Mooeen\Feedback\Exceptions\SpamRejected;
 use Mooeen\Feedback\Http\Requests\Feedback\SubmitRequest;
 use Mooeen\Feedback\Models\Feedback;
 
+/**
+ * @package_name {zh-CN: Web 接口 | en: Web}
+ * @module_name {zh-CN: 反馈与咨询 | en: Feedback}
+ * @controller_name {zh-CN: 反馈与咨询 | en: Feedback}
+ */
 class FeedbackController extends Controller
 {
     /**
-     * 提交一条反馈。
+     * 提交反馈与咨询
+     *
+     * 校验并受理访客提交的反馈或咨询。
      */
     public function store(SubmitRequest $request): JsonResponse
     {
@@ -59,8 +66,9 @@ class FeedbackController extends Controller
     }
 
     /**
-     * 表单渲染所需的元信息：分类目录 + 蜜罐字段名。
+     * 反馈与咨询表单元信息
      *
+     * 返回表单渲染所需的分类目录与蜜罐字段名。
      * 前端不知道该渲染哪个隐藏字段，蜜罐就形同虚设 —— 故字段名必须可获取。
      * 这不削弱防护：蜜罐挡的是无差别灌注的通用脚本，不是针对性攻击。
      */
