@@ -9,6 +9,7 @@
 
 namespace Mooeen\Feedback\Http\Requests\Feedback;
 
+use Illuminate\Validation\Rule;
 use Mooeen\Scaffold\Foundation\FormRequest;
 
 class IndexRequest extends FormRequest
@@ -23,6 +24,7 @@ class IndexRequest extends FormRequest
         return [
             'feedback_root_id'      => ['nullable', 'numeric'],
             'feedback_parent_id'    => ['nullable', 'numeric'],
+            'feedback_type'         => ['nullable', 'string', 'max:32', Rule::in($this->getValues('feedback_type'))],
             'feedback_status'       => ['nullable', 'integer', $this->getInEnums($this->getValues('feedback_status'))],
             'feedback_submitter_id' => ['nullable', 'numeric'],
             'feedback_speaker_side' => ['nullable', 'integer', $this->getInEnums($this->getValues('feedback_speaker_side'))],
