@@ -59,6 +59,30 @@ it('列表只出顶楼行，按最后发言时间倒序', function () {
         ->and($rows->last()->getKey())->toBe($newer->getKey());
 });
 
+it('管理列表按 host 分类与状态筛选', function () {
+    $matching = Feedback::submit([
+        'feedback_type'    => 'SUPPORT',
+        'feedback_content' => '匹配的反馈内容',
+    ]);
+    Feedback::submit([
+        'feedback_type'    => 'OTHER',
+        'feedback_content' => '另一条反馈内容',
+    ]);
+
+    $response = $this->getJson('/api/admin/feedbacks?page=1&page_limit=15&feedback_type=SUPPORT&feedback_status=10')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', (string) $matching->id);
+    $widgets = collect($response->json('form_widgets'))->flatten(1)->keyBy('field');
+
+    expect($widgets)->toHaveKeys(['feedback_type', 'feedback_status'])
+        ->and($widgets['feedback_type']['options'])->not->toBeEmpty();
+
+    $this->getJson('/api/admin/feedbacks?page=1&page_limit=15&feedback_type=UNKNOWN')
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('feedback_type');
+});
+
 it('回复动作固定受理侧，发言人取当前操作人而非前端传值', function () {
     $fb = Feedback::submit(['feedback_type' => 'SUPPORT', 'feedback_content' => '这是一条正常的反馈内容']);
 
