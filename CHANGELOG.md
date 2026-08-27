@@ -2,6 +2,12 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### Fixed
+
+- 管理列表正式接受并校验 Host 声明的 `feedback_type`，类型筛选改为精确匹配；状态与类型搜索元数据现在使用真实后端字段名，避免前端传入 `status/type` 后被验证层静默丢弃。
+
 ## [0.1.0] - 2026-08-11
 
 首个发布版本。「外部提交 → 后台受理 → 回复 → 状态流转」这套骨架此前在各 host 里各写一遍，本包把它收成一处。

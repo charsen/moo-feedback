@@ -54,7 +54,7 @@ class FeedbackFilter extends BaseFilter
 
     public function feedback_type($str)
     {
-        return $this->where('feedback_type', 'LIKE', "%{$str}%");
+        return $this->where('feedback_type', $str);
     }
 
     public function feedback_content($str)
