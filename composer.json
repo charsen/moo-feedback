@@ -57,6 +57,9 @@
         }
     },
     "extra": {
+        "branch-alias": {
+            "dev-dev": "0.1.x-dev"
+        },
         "laravel": {
             "providers": [
                 "Mooeen\\Feedback\\MooeenFeedbackServiceProvider"
