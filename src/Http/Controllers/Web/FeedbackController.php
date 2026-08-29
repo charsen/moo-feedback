@@ -43,9 +43,8 @@ class FeedbackController extends Controller
             return response()->json(['message' => $e->getMessage()], 422);
         }
 
-        $attrs = array_diff_key($validated, array_flip(['target', 'target_id']));
-        // 蜜罐值从原始请求取:它不在 validated() 里（见 SubmitRequest 注释），但 AntiSpamGuard 要看
-        $attrs[$honeypot] = $request->input($honeypot, '');
+        $attrs            = array_diff_key($validated, array_flip(['target', 'target_id']));
+        $attrs[$honeypot] = (string) ($validated[$honeypot] ?? '');
 
         try {
             Feedback::submit($attrs, $target);
