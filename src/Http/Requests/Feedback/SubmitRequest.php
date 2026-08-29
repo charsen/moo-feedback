@@ -5,8 +5,7 @@
  * 分类是否在目录里、requires_target 是否满足,**不在这里校验**:那是 Feedback::submit() 的职责,
  * 放两处会漂移。这里只管「格式对不对」,不管「业务上允不允许」。
  *
- * 蜜罐字段刻意**不列入规则**:它不该出现在 validated() 里(否则会被当业务字段往下传),
- * 控制器从原始请求单独取值喂给 AntiSpamGuard。
+ * 蜜罐字段由配置动态加入规则；Controller 从 validated() 取出后再交给反垃圾守卫。
  */
 
 namespace Mooeen\Feedback\Http\Requests\Feedback;
@@ -48,6 +47,9 @@ class SubmitRequest extends FormRequest
                 $rules[$field][0] = 'required';
             }
         }
+
+        $honeypot         = (string) config('moo-feedback.anti_spam.honeypot.field', 'nickname_confirm');
+        $rules[$honeypot] = ['nullable', 'string', 'max:255'];
 
         return $rules;
     }
