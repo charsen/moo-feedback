@@ -2,6 +2,13 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.3] - 2026-08-29
+
+### Changed
+
+- 统一根目录协作文档命名为 `NOTES.md` 与 `TODOS.md`。
+- 动态蜜罐字段进入 `SubmitRequest` 校验与 `validated()` 数据，Controller 不再读取原始输入。
+
 ## [0.1.2] - 2026-08-28
 
 ### Changed
