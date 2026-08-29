@@ -1,4 +1,4 @@
-# notes.md — 项目踩坑随手记
+# NOTES.md — 项目踩坑随手记
 
 本文件是 `moo-feedback` 的长期踩坑记录，用于保存已经验证、以后仍可能复用的项目经验。开始排障、升级、部署或较大改动前先通读一遍。
 
@@ -68,7 +68,7 @@
 ### 脱敏要扫历史，不是只扫工作树
 
 - **日期**：2026-08-10
-- **症状**：把 notes.md 里写死的宿主项目名与它的内部迁移状态脱敏、单独提一个 commit «xx 脱敏» 之后，`git grep` 工作树已经零命中，但 `git log -p --all | grep` 仍能翻出原文——脱敏 commit 只是又写了一遍，旧内容原封不动躺在被它修正的那个 commit 里。开源仓推出去就等于连历史一起公开。
+- **症状**：把 NOTES.md 里写死的宿主项目名与它的内部迁移状态脱敏、单独提一个 commit «xx 脱敏» 之后，`git grep` 工作树已经零命中，但 `git log -p --all | grep` 仍能翻出原文——脱敏 commit 只是又写了一遍，旧内容原封不动躺在被它修正的那个 commit 里。开源仓推出去就等于连历史一起公开。
 - **根因**：把「改文件」当成了「去掉信息」。git 的每次修改都是追加，不是覆盖。
 - **解法**：推之前用**两条**命令验收，缺一不可：`git grep -inE "<敏感词>"`（工作树）+ `git log -p --all --reflog | grep -inE "<敏感词>"`（全历史含悬挂对象）。仓没推过时改写零代价：`git checkout -b scrub <首次引入的 commit>` → `git checkout <脱敏 commit> -- <文件>` → `--amend` → cherry-pick 后续 commit（脱敏那条会变空，直接丢弃）。改写完必须验 `git diff <旧 HEAD> <新 HEAD> --stat` 为空（证明树完全一致，只动了历史），再 `git reflog expire --expire=now --all && git gc --prune=now` 把旧对象删净。**教训**：敏感信息在第一次 commit 前就不该落盘；已经落了就别只写脱敏 commit。
 
