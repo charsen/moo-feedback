@@ -2,6 +2,11 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.4] - 2026-09-08
+
+- 统一 `docs/` Markdown 的 `title`、`group` 与整数 `order`，规范文档导航名称、分组和排序，保留原正文及标签。
+- 本次仅更新文档，无运行时接口或数据库结构变更。
+
 ## [0.1.3] - 2026-08-29
 
 ### Changed
