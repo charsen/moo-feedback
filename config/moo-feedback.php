@@ -21,9 +21,9 @@ return [
         'enabled' => env('MOO_FEEDBACK_PUBLIC', false),
         'prefix'  => 'api',
         'name'    => 'feedback.',
-        // throttle 是 Laravel 层的粗粒度闸门，与包内 anti_spam 的业务限流互补：
-        // 前者挡住暴力刷接口，后者按 IP / 邮箱限制真实提交量。
-        'middleware' => ['api', 'throttle:30,1'],
+        // 包不携带 HTTP 限流：限流策略统一由 host 决定（host 可指向自己的限流中间件组）。
+        // 包内 anti_spam 属于业务防刷，仍按 IP / 邮箱限制真实提交量。
+        'middleware' => ['api'],
 
         // 联系方式哪些必填 —— 各 host 口径不同（有的要企业名，有的只要邮箱），故不在包里写死。
         'required_contact' => ['feedback_contact_name'],
