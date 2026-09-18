@@ -1,5 +1,9 @@
 # Changelog
 
+## 未发布
+
+- 姓名契约改为继承 `Mooeen\Contract\PersonnelNameResolver`（跨包契约收敛 B 批），新增依赖 `charsen/moo-contract`。
+
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
 ## [0.1.4] - 2026-09-08

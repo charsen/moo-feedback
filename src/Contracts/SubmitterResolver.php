@@ -22,7 +22,7 @@
 
 namespace Mooeen\Feedback\Contracts;
 
-interface SubmitterResolver
+interface SubmitterResolver extends \Mooeen\Contract\PersonnelNameResolver
 {
     /**
      * 批量解析 submitter_id → 姓名。返回 [id => 姓名] map；解析不到的 id 可缺省（读侧 ?? null 兜底）。
