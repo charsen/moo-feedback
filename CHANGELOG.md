@@ -1,6 +1,6 @@
 # Changelog
 
-## 未发布
+## [0.1.6] - 2026-09-19
 
 - 姓名契约改为继承 `Mooeen\Contract\PersonnelNameResolver`（跨包契约收敛 B 批），新增依赖 `charsen/moo-contract`。
 
