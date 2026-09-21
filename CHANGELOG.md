@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- **依赖基线抬至 `charsen/moo-scaffold ^2.2.1`（硬下限）**：原约束 `^2.1.x` 虽在 caret 语义下已允许 2.2.0，但下限仍停在 2.1 线；本次随 scaffold 发布 2.2.1 一并抬到 `^2.2.1`，不再兼容 2.1.x。本地 path 仓库里为 `charsen/moo-scaffold` 声明的版本号同步改为 `^2.2.1` —— path 是 canonical 源，不抬会把解析钉在旧版、令 `^2.2.1` 无法满足。本次为 manifest 变更，无运行时行为、无数据库结构变更。
+
 ## [0.1.6] - 2026-09-19
 
 - 姓名契约改为继承 `Mooeen\Contract\PersonnelNameResolver`（跨包契约收敛 B 批），新增依赖 `charsen/moo-contract`。
