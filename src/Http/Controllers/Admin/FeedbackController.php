@@ -189,7 +189,7 @@ class FeedbackController extends Controller
     /**
      * 永久删除反馈
      *
-     * @acl {zh-CN: 永久删除反馈, en: Destroy Forever Feedback, desc: }
+     * @acl {zh-CN: 永久删除反馈, en: Destroy Forever Feedback, desc:, danger: 1}
      */
     public function forceDestroy(int|string $id): BaseResource
     {
