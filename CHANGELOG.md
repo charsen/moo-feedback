@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- 最低公共契约依赖提升至 `charsen/moo-contract ^0.1.1`。
+
+- 提交人展示名直接读取公共 `PersonnelNameResolver`，移除包内同义接口与 Null 实现。
+
+## [0.1.8] - 2026-09-22
 
 ### Changed
 
