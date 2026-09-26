@@ -9,7 +9,7 @@
 
 namespace Mooeen\Feedback\Http\Controllers\Admin;
 
-use Mooeen\Feedback\Contracts\SubmitterResolver;
+use Mooeen\Contract\PersonnelNameResolver;
 use Mooeen\Feedback\Http\Controllers\Admin\Traits\FeedbackTrait;
 use Mooeen\Feedback\Http\Controllers\Admin\Traits\HandlesResourceActions;
 use Mooeen\Feedback\Http\Requests\Feedback\DestroyBatchRequest;
@@ -207,7 +207,7 @@ class FeedbackController extends Controller
     /**
      * 批量注入发言人姓名（读时解析，不落库）。
      *
-     * 一次解析当页 / 整串的全部 id，防列表 N+1；host 未绑定 SubmitterResolver 时返空 map，
+     * 一次解析当页 / 整串的全部 id，防列表 N+1；公共姓名契约未接线时显式失败；缺失人员
      * 各行的 _txt 为 null，不影响其余字段。匿名访客 submitter 为 null，不参与解析。
      *
      * @param list<Feedback> $rows
@@ -218,7 +218,7 @@ class FeedbackController extends Controller
             array_map(static fn (Feedback $r) => $r->feedback_submitter_id, $rows),
         )));
 
-        $names = $ids === [] ? [] : app(SubmitterResolver::class)->resolveNames($ids);
+        $names = $ids === [] ? [] : app(PersonnelNameResolver::class)->resolveNames($ids);
 
         foreach ($rows as $row) {
             $row->setAttribute('feedback_submitter_id_txt', $names[$row->feedback_submitter_id] ?? null);
