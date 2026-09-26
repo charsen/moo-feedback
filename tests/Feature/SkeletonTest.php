@@ -4,14 +4,11 @@
  */
 
 use Mooeen\Feedback\Contracts\FeedbackTypeResolver;
-use Mooeen\Feedback\Contracts\SubmitterResolver;
 use Mooeen\Feedback\Support\NullFeedbackTypeResolver;
-use Mooeen\Feedback\Support\NullSubmitterResolver;
 use Mooeen\Feedback\Support\SecretRedactor;
 
 it('未绑定契约时包仍可独立跑通', function () {
-    expect(app(FeedbackTypeResolver::class))->toBeInstanceOf(NullFeedbackTypeResolver::class)
-        ->and(app(SubmitterResolver::class))->toBeInstanceOf(NullSubmitterResolver::class);
+    expect(app(FeedbackTypeResolver::class))->toBeInstanceOf(NullFeedbackTypeResolver::class);
 });
 
 it('分类默认实现给出 OTHER —— 分类是核心，返空则无法提交', function () {
@@ -19,10 +16,6 @@ it('分类默认实现给出 OTHER —— 分类是核心，返空则无法提�
 
     expect($types)->toHaveKey('OTHER')
         ->and($types['OTHER'])->toHaveKey('label');
-});
-
-it('姓名默认实现返空 map —— 姓名只是展示装饰', function () {
-    expect(app(SubmitterResolver::class)->resolveNames([1, 2, 3]))->toBe([]);
 });
 
 it('config 已合并，host 不发布也能读', function () {

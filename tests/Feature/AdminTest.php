@@ -11,6 +11,9 @@ use Mooeen\Feedback\Models\Feedback;
 use Mooeen\Feedback\Tests\Stubs\TestFeedbackTypes;
 
 beforeEach(function () {
+    $names = Mockery::mock(\Mooeen\Contract\PersonnelNameResolver::class);
+    $names->shouldReceive('resolveNames')->andReturn([]);
+    app()->instance(\Mooeen\Contract\PersonnelNameResolver::class, $names);
     app()->bind(FeedbackTypeResolver::class, TestFeedbackTypes::class);
 });
 
