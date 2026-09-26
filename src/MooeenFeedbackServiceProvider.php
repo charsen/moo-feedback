@@ -1,15 +1,8 @@
 <?php declare(strict_types=1);
 /*
- * 意见反馈扩展包 ServiceProvider。
- *
- *   register() — 合并 config（host 不发布也能读 config('moo-feedback.*')）+ 注册两个契约默认实现 + 词条深合并
- *   boot()     — 加载迁移 + 发布 config + 加载语言目录
- *
- * 分类目录走 host 绑定的 FeedbackTypeResolver 契约声明；发言人姓名走 SubmitterResolver 契约读时批量解析。
- * 二者包内均有默认实现，未绑定时包可独立跑通。
- *
- * 雪花单例（scaffold.snowflake，ScaffoldProvider 绑定）/ 操作人身份（scaffold 共享 OperatorResolver）/
- * Filter 基类 / MergingLoader 均由 moo-scaffold 提供；本包不自持副本，也不依赖 moo-system 或 host App\*。
+ * 包配置、词条、路由与领域服务接线。
+ * 姓名消费统一使用 Mooeen\Contract\PersonnelNameResolver，由数据所有者包或 Host 显式提供实现。
+ * 当前身份继续使用 scaffold OperatorResolver；本包不依赖 moo-system。
  */
 
 namespace Mooeen\Feedback;
@@ -18,9 +11,7 @@ use Illuminate\Contracts\Translation\Loader;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Mooeen\Feedback\Contracts\FeedbackTypeResolver;
-use Mooeen\Feedback\Contracts\SubmitterResolver;
 use Mooeen\Feedback\Support\NullFeedbackTypeResolver;
-use Mooeen\Feedback\Support\NullSubmitterResolver;
 use Mooeen\Scaffold\Translation\MergingLoader;
 
 class MooeenFeedbackServiceProvider extends ServiceProvider
@@ -35,9 +26,6 @@ class MooeenFeedbackServiceProvider extends ServiceProvider
         // 分类目录：默认 NullFeedbackTypeResolver 只给一条 OTHER（分类是核心不是装饰，返空则无法提交）；
         // host 在自己的 provider（App\Moo\Feedback）里 bind 业务实现覆盖。
         $this->app->bind(FeedbackTypeResolver::class, NullFeedbackTypeResolver::class);
-
-        // 发言人姓名解析：默认 NullSubmitterResolver（返空、零 moo-system）；host 同上覆盖。
-        $this->app->bind(SubmitterResolver::class, NullSubmitterResolver::class);
 
         // 包内 lang/（db/model/validation 的反馈字段词条）与 host 同名文件深合并（host 优先）。
         // 本包用 scaffold 共享 MergingLoader；host 无需拷 yaml / 跑 moo:i18n 即有翻译。

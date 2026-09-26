@@ -1,8 +1,10 @@
 # moo-feedback · 意见反馈
 
+> Plan 72：人员与组织接线已调整，兼容组合和 Host 迁移要求见 sibling `moo-contract/docs/organization-upgrade.md`。本轮源码尚未发布，不能直接按旧最低版本约束部署。
+
 一个 Laravel **功能模块扩展包**：把「**外部提交 → 后台受理 → 回复 → 状态流转**」这套骨架统一沉淀成一处，供多个后台项目复用。咨询、留言、反馈、建议——四种叫法，同一副骨架。
 
-moo 系基础设施依赖 [`charsen/moo-scaffold`](https://github.com/charsen/moo-scaffold)；不直接依赖 `moo-system` 或 host `App\*`。分类目录经 `FeedbackTypeResolver` 契约由 host 声明，发言人姓名经 `SubmitterResolver` 契约读时批量解析，二者未绑定时包仍可独立运行。
+moo 系基础设施依赖 [`charsen/moo-scaffold`](https://github.com/charsen/moo-scaffold)；不直接依赖 `moo-system` 或 host `App\*`。分类由 FeedbackTypeResolver 表达；姓名消费公共 `Mooeen\Contract\PersonnelNameResolver`，新版 System 提供默认，无 System 时 Host 显式绑定。
 
 > **状态**：骨架已就位（契约 / 默认实现 / 配置 / 脱敏 / CI）。表、模型与管理面属 schema-first codegen 产物，随 `scaffold/database/Feedback.yaml` 落地。设计全貌见 [`docs/overview.md`](docs/overview.md)。
 
@@ -70,7 +72,7 @@ moo 系基础设施依赖 [`charsen/moo-scaffold`](https://github.com/charsen/mo
 | **提交反馈（HTTP）** | `POST {prefix}/feedbacks` + `GET {prefix}/feedbacks/meta`，**默认关闭**，见下 |
 | **后台受理** | `api/admin/feedbacks`：列表 / 详情 / 回复 / 状态流转 / 清理，**无 store / update** |
 | **分类目录** | host 实现 `Contracts\FeedbackTypeResolver`，在自己的 provider 里 bind |
-| **发言人姓名** | host 实现 `Contracts\SubmitterResolver`（读时批量，防 N+1） |
+| **发言人姓名** | 公共 PersonnelNameResolver；旧接口已删除，缺公共绑定明确失败 |
 | **当前操作人** | 复用 scaffold 共享 `OperatorResolver`，本包不自造 |
 | **文本脱敏** | `Support\SecretRedactor`：打码 JWT / Bearer / `password=` 等凭证类模式；**刻意不打码** 手机号等 PII（打码后无法照搬复现问题，PII 由访问控制兜底） |
 

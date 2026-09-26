@@ -222,7 +222,7 @@ public function types(): array
 | 契约 | 归属 | 作用 |
 |---|---|---|
 | `FeedbackTypeResolver` | 本包 | 声明分类目录（见 §5）；默认实现返 `OTHER` |
-| `SubmitterResolver` | 本包 | `feedback_submitter_id` → 姓名，读时批量解析，防列表 N+1；不落库不快照。因提交人与受理人同住一列，一个契约覆盖双方 |
+| `PersonnelNameResolver` | 本包 | `feedback_submitter_id` → 姓名，读时批量解析，防列表 N+1；不落库不快照。因提交人与受理人同住一列，一个契约覆盖双方 |
 | `OperatorResolver` | 复用 `moo-scaffold` | 「当前是谁 → id」，写入受理方发言时取操作人；本包不自造 |
 
 **事件**（包只派事件，不投递通知）：
@@ -270,6 +270,6 @@ FeedbackStatusChanged 状态变更（携带前后值）
 
 1. `composer require charsen/moo-feedback`
 2. `php artisan migrate`
-3. 建胶水层 `app/Moo/Feedback/`：实现 `FeedbackTypeResolver`（分类目录）与 `SubmitterResolver`（姓名解析），在 `FeedbackServiceProvider` 中 bind
+3. 建胶水层 `app/Moo/Feedback/`：实现 `FeedbackTypeResolver`（分类目录）与 `PersonnelNameResolver`（姓名解析），在 `FeedbackServiceProvider` 中 bind
 4. 按需在 `config/moo-feedback.php` 调整环境采集开关与反垃圾阈值
 5. 业务模型 `use Feedbackable` 即可被反馈关联（可选，仅 `requires_target` 类分类需要）
