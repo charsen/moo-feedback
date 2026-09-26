@@ -4,6 +4,7 @@
 
 - 提交人展示名直接读取公共 `PersonnelNameResolver`，移除包内同义接口与 Null 实现。
 
+## [0.1.8] - 2026-09-22
 
 ### Changed
 
