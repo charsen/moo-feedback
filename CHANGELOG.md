@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- **清单双轨（本地 path / 干净克隆 vcs）**：`composer.json` 改为**本地优先**（`path` + `symlink`，覆盖**传递私包闭包**），
+  另增 `composer.ci.json`（纯 vcs，`git@gitee.com:charsen/...`）供干净克隆 / CI 使用；`.gitattributes` 已把
+  `composer.ci.json` 列入 `export-ignore`。原因是 `path` 条目**急切校验**：目录不存在时 Composer 直接报
+  `PathRepository ... does not exist`，vcs 兜底根本轮不到 —— 「保留 path 又要能在干净目录装」只能靠双清单。
+  `require` 约束未变；**无运行时行为与数据库结构变更**。
+
 - 最低公共契约依赖提升至 `charsen/moo-contract ^0.1.1`。
 
 - 提交人展示名直接读取公共 `PersonnelNameResolver`，移除包内同义接口与 Null 实现。
