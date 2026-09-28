@@ -2,7 +2,7 @@
 
 namespace Mooeen\Feedback\Http\Controllers\Admin\Traits;
 
-use Illuminate\Validation\ValidationException;
+use Mooeen\Scaffold\Exceptions\BaseException;
 use Mooeen\Scaffold\Foundation\BaseResource;
 
 /**
@@ -30,7 +30,7 @@ trait HandlesResourceActions
     /**
      * 批量删除
      *
-     * @throws ValidationException
+     * @throws BaseException
      */
     private function destroyBatchAction($request): BaseResource
     {
@@ -45,7 +45,7 @@ trait HandlesResourceActions
         });
 
         if (count($result) < 1) {
-            throw ValidationException::withMessages(['ids' => ['No batch operation results.']]);
+            throw new BaseException('No batch operation results.');
         }
 
         return BaseResource::make($result);
@@ -65,7 +65,7 @@ trait HandlesResourceActions
     /**
      * 恢复
      *
-     * @throws ValidationException
+     * @throws BaseException
      */
     private function restoreAction($request): BaseResource
     {
@@ -80,7 +80,7 @@ trait HandlesResourceActions
         });
 
         if (count($result) < 1) {
-            throw ValidationException::withMessages(['ids' => ['No batch operation results.']]);
+            throw new BaseException('No batch operation results.');
         }
 
         return BaseResource::make($result);

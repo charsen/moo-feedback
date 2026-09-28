@@ -16,6 +16,8 @@ class DestroyBatchRequest extends FormRequest
 {
     use FeedbackRequestTrait;
 
+    protected bool $fieldValidation = false;
+
     /**
      * Get the validation rules that apply to the request.
      */
