@@ -11,6 +11,9 @@ permissions:
 jobs:
   php:
     runs-on: ubuntu-latest
+    env:
+      # 默认 composer.json 是本地优先的 path 清单（同级目录），干净 runner 上不存在 ⇒ 必须切到 vcs 清单
+      COMPOSER: composer.ci.json
     steps:
       - uses: actions/checkout@v4
 
