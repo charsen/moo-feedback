@@ -11,10 +11,6 @@ permissions:
 jobs:
   php:
     runs-on: ubuntu-latest
-    env:
-      # 私有依赖（charsen/moo-contract）走 vcs/Gitee：默认清单是本地优先的 path+symlink，
-      # 干净 runner 上没有同级目录 ⇒ 必须切到 composer.ci.json。
-      COMPOSER: composer.ci.json
     steps:
       - uses: actions/checkout@v4
 
@@ -25,8 +21,8 @@ jobs:
           tools: composer:v2
 
       # 拉私有包需要 Gitee 部署密钥（仓库 secret：GITEE_DEPLOY_KEY）。
-      # 未配置时本 job 会在 composer install 阶段失败 —— 这是显式的「凭据没接线」，
-      # 不会静默跳过（本仓是开源仓，外部贡献者的 PR 需要在维护者侧配好该 secret 才能过 CI）。
+      # 本仓 composer.json 本就只有 vcs 条目（无 path）⇒ 干净 runner 上可直接 install；
+      # 未配密钥时会在 install 阶段显式失败，不会静默跳过。
       - name: Configure Gitee SSH deploy key
         run: |
           mkdir -p ~/.ssh
