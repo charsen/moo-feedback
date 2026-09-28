@@ -69,34 +69,16 @@
     },
     "repositories": [
         {
-            "type": "path",
-            "url": "../moo-contract",
-            "options": {
-                "symlink": true,
-                "versions": {
-                    "charsen/moo-contract": "0.1.1"
-                }
-            }
+            "type": "vcs",
+            "url": "git@gitee.com:charsen/moo-contract.git"
         },
         {
-            "type": "path",
-            "url": "../moo-monitor-laravel",
-            "options": {
-                "symlink": true,
-                "versions": {
-                    "charsen/moo-monitor-laravel": "0.1.18"
-                }
-            }
+            "type": "vcs",
+            "url": "git@gitee.com:charsen/moo-monitor-laravel.git"
         },
         {
-            "type": "path",
-            "url": "../moo-scaffold",
-            "options": {
-                "symlink": true,
-                "versions": {
-                    "charsen/moo-scaffold": "2.2.8"
-                }
-            }
+            "type": "vcs",
+            "url": "git@gitee.com:charsen/moo-scaffold.git"
         }
     ]
 }

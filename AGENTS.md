@@ -4,6 +4,10 @@
 验证门禁、E2E 与浏览器验证、Composer 三份 manifest、跨仓公共契约等通用规则随全局 `~/.agents/AGENTS.md`，本文件不重复。
 冲突时按「系统 / 用户当前指令 > 离目标最近的 `AGENTS.md` > 全局」判断；版本、命令与接口以当前代码、manifest 和测试核实。
 
+> **清单双轨**：`composer.json` 是**本地优先**（`path` + `symlink`），干净克隆 / CI 用
+> `COMPOSER=composer.ci.json composer update`（纯 vcs）—— 本仓开源，走 Gitee + GitHub 双源；workflow 里用 `COMPOSER=composer.ci.json`。两份清单**共用 `composer.lock`**，
+> 切换后要重跑一次 `composer update`；`composer.ci.json` 已列入 `export-ignore`，不随 dist 分发。
+
 ## 开工顺序
 
 1. 按任务读取真实入口：

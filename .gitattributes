@@ -11,6 +11,7 @@
 /CLAUDE.md          export-ignore
 /NOTES.md           export-ignore
 /TODOS.md           export-ignore
+/composer.ci.json   export-ignore
 /docs               export-ignore
 /phpunit.xml        export-ignore
 /pint.json          export-ignore
