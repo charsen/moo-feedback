@@ -110,6 +110,9 @@ abstract class TestCase extends Orchestra
 
         $app['router']->middlewareGroup('admin', []);
 
+        // 测试期 cache 固定 array：:memory: sqlite 没有 cache 表，雪花 sequence resolver 等会去查它。
+        // 注：写在 phpunit.xml 的 <env name="CACHE_STORE"> 不生效（实测仍去查 cache 表），必须设在这里。
+        $app['config']->set('cache.default', 'array');
         $app['config']->set('database.default', 'testing');
         $app['config']->set('database.connections.testing', [
             'driver'   => 'sqlite',

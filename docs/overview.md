@@ -210,8 +210,10 @@ public function types(): array
 三个安全设计：
 
 - **成功与蜜罐静默拦截返回完全相同的响应**（`201 {"submitted": true}`，且**不返回反馈 ID**）。二者必须对脚本作者不可区分，否则等于告诉他「换个字段名再来」。不返回 ID 同时避免泄漏主键序列信息。
-- **多态宿主只认 morph 别名**（`target=product`），经 `Relation::getMorphedModel()` 解析，未注册的别名一律 422。**不接受**前端直传模型 FQN —— 那等于让客户端指定要实例化哪个类。
+- **多态宿主只认 morph 别名**（`target=product`），经 `Relation::getMorphedModel()` 解析，未注册的别名一律 522 / `error.msg`。**不接受**前端直传模型 FQN —— 那等于让客户端指定要实例化哪个类。
 - **必填联系方式由 config 决定**（`public.required_contact`）。各 host 口径不同（有的要企业名，有的只要邮箱），不在包里写死。
+
+实际反馈分类、内容和联系方式控件校验使用 `422 + errors.实际字段`；缺少必需的隐藏业务对象、非法对象别名或其他隐藏上下文使用 522。蜜罐静默拦截与限流 429 保持原协议。
 
 `public.middleware` 默认带 `throttle:30,1`：这是 Laravel 层的粗粒度闸门，与包内 `anti_spam` 的业务限流**互补**——前者挡暴力刷接口，后者按 IP / 邮箱限制真实提交量。
 

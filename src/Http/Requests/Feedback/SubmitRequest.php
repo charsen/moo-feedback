@@ -10,6 +10,9 @@
 
 namespace Mooeen\Feedback\Http\Requests\Feedback;
 
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\ValidationException;
+use Mooeen\Scaffold\Exceptions\BaseException;
 use Mooeen\Scaffold\Foundation\FormRequest;
 
 class SubmitRequest extends FormRequest
@@ -19,6 +22,17 @@ class SubmitRequest extends FormRequest
     public function authorize(): bool
     {
         return true;    // 公开入口:任何人可提交,门槛由反垃圾与 throttle 中间件把守
+    }
+
+    protected function failedValidation(Validator $validator): void
+    {
+        $fields      = array_merge(...$this->formLayout());
+        $fieldErrors = array_intersect_key($validator->errors()->messages(), array_flip($fields));
+        if ($fieldErrors === []) {
+            throw new BaseException($validator->errors()->first());
+        }
+
+        throw ValidationException::withMessages($fieldErrors);
     }
 
     public function rules(): array

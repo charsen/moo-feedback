@@ -54,7 +54,7 @@ it('超频返回 429', function () {
 });
 
 it('分类不在 host 目录里返回 422', function () {
-    $this->postJson('/api/feedbacks', payload(['feedback_type' => 'NOPE']))->assertStatus(422);
+    $this->postJson('/api/feedbacks', payload(['feedback_type' => 'NOPE']))->assertStatus(422)->assertJsonValidationErrors('feedback_type');
 });
 
 it('必填联系方式由 config 决定', function () {
@@ -65,7 +65,7 @@ it('必填联系方式由 config 决定', function () {
 });
 
 it('内容过短被校验层挡下', function () {
-    $this->postJson('/api/feedbacks', payload(['feedback_content' => '短']))->assertStatus(422);
+    $this->postJson('/api/feedbacks', payload(['feedback_content' => '短']))->assertStatus(422)->assertJsonValidationErrors('feedback_content');
 });
 
 it('多态宿主只认 morph 别名，不接受模型 FQN', function () {
@@ -79,11 +79,11 @@ it('多态宿主只认 morph 别名，不接受模型 FQN', function () {
     // 直传 FQN 一律拒绝 —— 否则等于让客户端指定要实例化哪个类
     $this->postJson('/api/feedbacks', payload([
         'feedback_type' => 'SALES', 'target' => Product::class, 'target_id' => $product->getKey(),
-    ]))->assertStatus(422);
+    ]))->assertStatus(522)->assertJsonPath('ok', false);
 });
 
-it('requires_target 分类不带宿主返回 422', function () {
-    $this->postJson('/api/feedbacks', payload(['feedback_type' => 'SALES']))->assertStatus(422);
+it('requires_target 分类不带宿主返回 522', function () {
+    $this->postJson('/api/feedbacks', payload(['feedback_type' => 'SALES']))->assertStatus(522)->assertJsonPath('ok', false);
 });
 
 it('meta 给出表单渲染所需的一切', function () {

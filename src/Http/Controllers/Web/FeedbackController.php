@@ -19,6 +19,7 @@ use Mooeen\Feedback\Exceptions\InvalidFeedbackType;
 use Mooeen\Feedback\Exceptions\SpamRejected;
 use Mooeen\Feedback\Http\Requests\Feedback\SubmitRequest;
 use Mooeen\Feedback\Models\Feedback;
+use Mooeen\Scaffold\Exceptions\BaseException;
 
 /**
  * @package_name {zh-CN: Web 接口 | en: Web}
@@ -40,7 +41,7 @@ class FeedbackController extends Controller
         try {
             $target = $this->resolveTarget($validated['target'] ?? null, $validated['target_id'] ?? null);
         } catch (InvalidFeedbackType $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
+            throw new BaseException($e->getMessage());
         }
 
         $attrs            = array_diff_key($validated, array_flip(['target', 'target_id']));
@@ -54,11 +55,22 @@ class FeedbackController extends Controller
             }
 
             return response()->json(
-                ['message' => $e->getMessage(), 'reason' => $e->reason],
+                [
+                    'message' => $e->getMessage(),
+                    'reason'  => $e->reason,
+                    ...($e->reason === 'throttle' ? [] : ['errors' => ['feedback_content' => [$e->getMessage()]]]),
+                ],
                 $e->reason === 'throttle' ? 429 : 422,
             );
         } catch (InvalidFeedbackType $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
+            if (array_key_exists((string) $validated['feedback_type'], app(FeedbackTypeResolver::class)->types())) {
+                throw new BaseException($e->getMessage());
+            }
+
+            return response()->json([
+                'message' => $e->getMessage(),
+                'errors'  => ['feedback_type' => [$e->getMessage()]],
+            ], 422);
         }
 
         return $this->accepted();

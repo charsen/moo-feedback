@@ -11,6 +11,9 @@ permissions:
 jobs:
   php:
     runs-on: ubuntu-latest
+    env:
+      # 默认 composer.json 是本地优先的 path 清单（同级目录），干净 runner 上不存在 ⇒ 必须切到 vcs 清单
+      COMPOSER: composer.ci.json
     steps:
       - uses: actions/checkout@v4
 
@@ -19,6 +22,16 @@ jobs:
           php-version: '8.2'
           coverage: none
           tools: composer:v2
+
+      # 拉私有包需要 Gitee 部署密钥（仓库 secret：GITEE_DEPLOY_KEY）。
+      # 本仓 composer.json 本就只有 vcs 条目（无 path）⇒ 干净 runner 上可直接 install；
+      # 未配密钥时会在 install 阶段显式失败，不会静默跳过。
+      - name: Configure Gitee SSH deploy key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.GITEE_DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -t rsa,ed25519 gitee.com >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Validate Composer metadata
         run: composer validate --strict
@@ -32,5 +45,6 @@ jobs:
       - name: Run tests
         run: composer test -- --colors=always
 
+      # 不加 --locked：包仓的 composer.lock 不入库（见 .gitignore），加 --locked 必失败。
       - name: Audit dependencies
-        run: composer audit --locked --no-interaction
+        run: composer audit --no-interaction
