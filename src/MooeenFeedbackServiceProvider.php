@@ -20,7 +20,7 @@ class MooeenFeedbackServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/moo-feedback.php', 'moo-feedback');
 
-        // 雪花主键单例由 ScaffoldProvider 绑定为 scaffold.snowflake；操作人身份（当前是谁，写入受理方发言时取）
+        // 雪花主键单例由 MooeenScaffoldServiceProvider 绑定为 scaffold.snowflake；操作人身份（当前是谁，写入受理方发言时取）
         // 用 scaffold 共享 Mooeen\Scaffold\Contracts\OperatorResolver（默认 auth()->id()）。二者本包均不自持。
 
         // 分类目录：默认 NullFeedbackTypeResolver 只给一条 OTHER（分类是核心不是装饰，返空则无法提交）；

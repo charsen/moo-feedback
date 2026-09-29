@@ -7,7 +7,7 @@
  * 不 use 也能用包。
  */
 
-namespace Mooeen\Feedback\Models\Concerns;
+namespace Mooeen\Feedback\Models\Traits;
 
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Mooeen\Feedback\Models\Feedback;
