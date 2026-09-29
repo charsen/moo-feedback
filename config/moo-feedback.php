@@ -10,7 +10,7 @@ return [
     'admin' => [
         'prefix'     => 'api/admin',
         'name'       => 'admin.',
-        'middleware' => env('MOO_FEEDBACK_ADMIN_MIDDLEWARE', 'admin'),
+        'middleware' => env('MOO_FEEDBACK_ADMIN_MIDDLEWARE', 'moo-feedback'),
     ],
 
     // 前台提交入口（访客 / 登录用户填表提交）。
