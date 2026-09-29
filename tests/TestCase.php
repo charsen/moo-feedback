@@ -14,7 +14,7 @@ abstract class TestCase extends Orchestra
 
     /**
      * 只注册本包 Provider —— 零 moo-system（分类目录与发言人姓名均走契约，默认实现在包内）。
-     * scaffold.snowflake 单例在 defineEnvironment shim，不加载重的 ScaffoldProvider。
+     * scaffold.snowflake 单例在 defineEnvironment shim，不加载重的 MooeenScaffoldServiceProvider。
      */
     protected function getPackageProviders($app): array
     {
@@ -33,7 +33,7 @@ abstract class TestCase extends Orchestra
 
     /**
      * host 端契约的最低替身 —— 仅为「包能 boot 起来」：
-     *   - scaffold.snowflake 单例（生产由 auto-discover 的 ScaffoldProvider 绑）
+     *   - scaffold.snowflake 单例（生产由 auto-discover 的 MooeenScaffoldServiceProvider 绑）
      *   - scaffold 共享 OperatorResolver（当前是谁 → id，默认 GuardOperatorResolver）
      *   - Route::iResource 宏（admin 路由文件全程用它）
      *   - scaffold FormWidgetCollection 依赖的 Collection 宏
@@ -42,16 +42,16 @@ abstract class TestCase extends Orchestra
      */
     protected function defineEnvironment($app): void
     {
-        // 雪花单例上移 scaffold（scaffold.snowflake，生产由 auto-discover 的 ScaffoldProvider 绑）。
-        // 包测试不加载重的 ScaffoldProvider，在此按原 registerSnowflake 同款 shim。
+        // 雪花单例上移 scaffold（scaffold.snowflake，生产由 auto-discover 的 MooeenScaffoldServiceProvider 绑）。
+        // 包测试不加载重的 MooeenScaffoldServiceProvider，在此按原 registerSnowflake 同款 shim。
         $app->singleton('scaffold.snowflake', function ($app) {
             return (new \Godruoyi\Snowflake\Snowflake(1, 1))
                 ->setStartTimeStamp(strtotime('2021-10-10') * 1000)
                 ->setSequenceResolver(new \Godruoyi\Snowflake\LaravelSequenceResolver($app['cache']->store()));
         });
 
-        // 操作人身份契约（scaffold 共享 OperatorResolver）：生产由 ScaffoldProvider 默认绑 GuardOperatorResolver；
-        // 包测试不加载 ScaffoldProvider，在此同款 shim（未登录 auth()->id() 返 null）。
+        // 操作人身份契约（scaffold 共享 OperatorResolver）：生产由 MooeenScaffoldServiceProvider 默认绑 GuardOperatorResolver；
+        // 包测试不加载 MooeenScaffoldServiceProvider，在此同款 shim（未登录 auth()->id() 返 null）。
         $app->bind(
             \Mooeen\Scaffold\Contracts\OperatorResolver::class,
             \Mooeen\Scaffold\Support\GuardOperatorResolver::class,
