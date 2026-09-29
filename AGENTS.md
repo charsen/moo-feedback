@@ -81,3 +81,5 @@
 - Testbench / SQLite 不能证明 MySQL、真实 admin 中间件顺序、ACL、morph 别名解析、前台入口与前端契约正确。
 - 涉及 model、Request、controller action、route、config key、schema / migration 或公共响应时，除包内测试外还要在受影响 host 执行相应真实测试；未验证项必须如实说明。
 - 变更 Laravel 兼容面时按 `composer.json` 的支持范围验证；只跑 Laravel 12 不得宣称 Laravel 10/11 已通过。
+
+- **本仓是公开仓**（GitHub 匿名可见）：文档、提交信息、注释与产物里**不得出现未开源扩展包名与内部项目名**，统一写 `moo-<name>`、"某个内部 Host" 等中性表述；含内部信息的清单/方案放私有 plan 库。
