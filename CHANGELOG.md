@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.1.10] - 2026-09-29
+
+- **破坏性：model trait 迁移** —— `Feedbackable` 从 `src/Models/Concerns/` 迁到规范位置 `src/Models/Traits/`（命名空间 `...\Models\Traits`）。消费方需同步 `use`；跨仓定义包先发、消费包后跟。
+
 - **清单双轨（本地 path / 干净克隆 vcs）**：`composer.json` 改为**本地优先**（`path` + `symlink`，覆盖**传递私包闭包**），
   另增 `composer.ci.json`（纯 vcs，`git@gitee.com:charsen/...`）供干净克隆 / CI 使用；`.gitattributes` 已把
   `composer.ci.json` 列入 `export-ignore`。原因是 `path` 条目**急切校验**：目录不存在时 Composer 直接报
