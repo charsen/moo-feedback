@@ -165,3 +165,24 @@ it('列表表头是裁剪过的受理视图，不是全字段倾倒', function (
         ->and($keys)->not->toContain('feedback_ip')
         ->and($keys)->not->toContain('feedback_phone');
 });
+
+it('默认列表不公开额外联系方式，Host 可补充机构字段且回收站一致', function () {
+    $feedback = Feedback::submit([
+        'feedback_type'         => 'SUPPORT',
+        'feedback_content'      => '测试列表的机构字段',
+        'feedback_organization' => '测试机构',
+        'feedback_phone'        => '13800000000',
+    ]);
+    $this->getJson('/api/admin/feedbacks?page=1&page_limit=15')->assertOk()
+        ->assertJsonMissingPath('data.0.feedback_organization')
+        ->assertJsonMissingPath('data.0.feedback_phone');
+
+    config(['moo-feedback.admin.list_extra_fields' => ['feedback_organization', 'feedback_organization']]);
+    $this->getJson('/api/admin/feedbacks?page=1&page_limit=15')->assertOk()
+        ->assertJsonPath('data.0.feedback_organization', '测试机构')
+        ->assertJsonMissingPath('data.0.feedback_phone');
+    $feedback->delete();
+    $this->getJson('/api/admin/feedbacks/trashed?page=1&page_limit=15')->assertOk()
+        ->assertJsonPath('data.0.feedback_organization', '测试机构')
+        ->assertJsonMissingPath('data.0.feedback_phone');
+});
