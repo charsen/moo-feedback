@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.1.11] - 2026-09-30
+
+- 新增可选 `admin.list_extra_fields`，允许 Host 为管理列表及回收站补充实际需要的数据库字段；默认空，保留原有裁剪行为，配置不从 HTTP 输入读取。
+- 增加默认裁剪、机构字段启用、字段去重及回收站一致性回归；本次不新增数据字段或路由，不改变认证与 ACL。
+
 ## [0.1.10] - 2026-09-29
 
 - **破坏性：model trait 迁移** —— `Feedbackable` 从 `src/Models/Concerns/` 迁到规范位置 `src/Models/Traits/`（命名空间 `...\Models\Traits`）。消费方需同步 `use`；跨仓定义包先发、消费包后跟。

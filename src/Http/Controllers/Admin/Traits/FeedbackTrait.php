@@ -19,7 +19,7 @@ trait FeedbackTrait
      * 列表的查询字段
      *
      * 相对生成物做了取舍：列表页只查「列表要用的」，环境采集（ip / device / platform / browser /
-     * page_url）与联系方式细项（organization / phone）都只在详情页有意义，列表不查也不显示 ——
+     * page_url）与联系方式细项默认只在详情页显示，Host 可显式补充列表需要的字段 ——
      * 一屏二十列没人看得下去，且访客 IP、手机号这类数据不该在列表页无差别铺开。
      *
      * feedback_content 反而必须查：反馈列表不给内容预览，受理人员每条都得点进去才知道是什么事。
@@ -42,7 +42,7 @@ trait FeedbackTrait
             $append = ['deleted_at'];
         }
 
-        return [...$fields, ...$append];
+        return array_values(array_unique([...$fields, ...$append, ...config('moo-feedback.admin.list_extra_fields', [])]));
     }
 
     /**

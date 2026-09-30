@@ -11,6 +11,8 @@ return [
         'prefix'     => 'api/admin',
         'name'       => 'admin.',
         'middleware' => env('MOO_FEEDBACK_ADMIN_MIDDLEWARE', 'moo-feedback'),
+        // Host 管理列表额外需要的数据库字段；默认不增加联系方式或环境信息。
+        'list_extra_fields' => [],
     ],
 
     // 前台提交入口（访客 / 登录用户填表提交）。

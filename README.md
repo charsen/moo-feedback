@@ -172,6 +172,19 @@ moo 系包出接口与 ACL，页面由各 host 自己的管理端仓库实现。
 
 验证码**刻意不集成**——包不绑定具体服务商，host 自行在提交入口前置。
 
+### 后台列表补充字段
+
+默认列表省略机构、电话及环境采集字段。Host 确需展示机构时，在自己的 `moo-feedback.php` 中配置：
+
+```php
+'admin' => [
+    // 保留该 Host 原有的 prefix、name、middleware。
+    'list_extra_fields' => ['feedback_organization'],
+],
+```
+
+只接受部署侧配置的数据库列名，不从 HTTP 请求读取；同时作用于列表和回收站，保持原有认证与 ACL。配置仅补充查询字段，表头由 Host 页面决定。请只添加管理列表实际需要的字段。
+
 ## 开发
 
 ```bash
